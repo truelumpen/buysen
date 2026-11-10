@@ -1,0 +1,11 @@
+# Credentials and local environment configuration
+.env
+
+# Databases and transient database state
+*.db
+data/
+
+# Editor settings and generated files
+.vscode/
+__pycache__/
+.venv/

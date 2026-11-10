@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "base.html" import product_card %}
+
+{% block title %}{{ category }} · Cloneazon{% endblock %}
+
+{% block content %}
+<h1>{{ category }}</h1>
+<p class="muted">{{ products|length }} products</p>
+
+<div class="grid">
+  {% for p in products %}
+  {{ product_card(p) }}
+  {% endfor %}
+</div>
+{% endblock %}

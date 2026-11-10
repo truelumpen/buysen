@@ -1,0 +1,20 @@
+[project]
+name = "cloneazon"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "jinja2",
+    "python-multipart",
+    "numpy",
+    "sentence-transformers",
+    "requests",
+]
+
+[dependency-groups]
+dev = ["pytest"]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"

@@ -1,0 +1,55 @@
+{% macro price(cents) %}${{ "%.2f"|format(cents / 100) }}{% endmacro -%}
+
+{% macro stars(n) %}{{ "★" * n }}{{ "☆" * (5 - n) }}{% endmacro -%}
+
+{% macro product_card(p) %}
+<a class="card" href="/product/{{ p['id'] }}">
+  <img src="/{{ p['image_path'] }}" alt="{{ p['title'] }}" loading="lazy">
+  <span class="card-title">{{ p['title'] }}</span>
+  {% if p['rating'] is not none %}
+  <span class="stars">{{ stars(p['rating']|round|int) }}</span>
+  {% endif %}
+  <span class="price">{{ price(p['price_cents']) }}</span>
+</a>
+{% endmacro -%}
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Cloneazon{% endblock %}</title>
+  <link rel="icon" href="/static/logo.svg">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-top">
+      <a class="brand" href="/">Cloneazon</a>
+      <a class="purchases-link" href="/bought">Your purchases</a>
+      <form class="user-switch" method="post" action="/switch-user">
+        <label for="user-select">Browsing as</label>
+        <select id="user-select" name="user_id">
+          {% for u in users %}
+          <option value="{{ u['id'] }}" {% if u['id'] == user_id %}selected{% endif %}>{{ u['name_'] }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit">Switch</button>
+      </form>
+    </div>
+    <nav class="category-nav">
+      {% for c in categories %}
+      <a href="/category/{{ c|urlencode }}">{{ c }}</a>
+      {% endfor %}
+    </nav>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    Cloneazon is a portfolio demo. Product data comes from the Amazon Reviews 2023 dataset.
+  </footer>
+</body>
+</html>

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% from "base.html" import product_card, price, stars %}
+
+{% block title %}{{ product['title'] }} · Cloneazon{% endblock %}
+
+{% block content %}
+<article class="product">
+  <img class="product-image" src="/{{ product['image_path'] }}" alt="{{ product['title'] }}">
+
+  <div class="product-info">
+    <a class="breadcrumb" href="/category/{{ product['category']|urlencode }}">{{ product['category'] }}</a>
+    <h1>{{ product['title'] }}</h1>
+
+    {% if product['rating'] is not none %}
+    <p class="rating">
+      <span class="stars">{{ stars(product['rating']|round|int) }}</span>
+      {{ "%.1f"|format(product['rating']) }} out of 5
+    </p>
+    {% endif %}
+
+    <p class="price price-large">{{ price(product['price_cents']) }}</p>
+
+    <form method="post" action="/product/{{ product['id'] }}/buy">
+      <button type="submit" class="button-primary">Buy now</button>
+    </form>
+
+    {% if product['description_'] %}
+    <p class="description">{{ product['description_'] }}</p>
+    {% endif %}
+  </div>
+</article>
+
+{% if similar %}
+<section class="similar">
+  <h2>Customers also liked</h2>
+  <div class="grid">
+    {% for p in similar %}
+    {{ product_card(p) }}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="reviews">
+  <h2>Reviews ({{ reviews|length }})</h2>
+
+  <form class="review-form" method="post" action="/product/{{ product['id'] }}/review">
+    <h3>Write a review</h3>
+    <label for="rating">Rating</label>
+    <select id="rating" name="rating">
+      {% for n in range(5, 0, -1) %}
+      <option value="{{ n }}">{{ stars(n) }}</option>
+      {% endfor %}
+    </select>
+    <label for="text">Review (optional)</label>
+    <textarea id="text" name="text" rows="4"></textarea>
+    <button type="submit">Submit review</button>
+  </form>
+
+  {% for r in reviews %}
+  <div class="review">
+    <p class="review-header">
+      <span class="stars">{{ stars(r['rating']) }}</span>
+      <strong>{{ r['reviewer'] }}</strong>
+      <span class="muted">{{ r['created_at'][:10] }}</span>
+    </p>
+    {% if r['text_'] %}
+    <p>{{ r['text_'] }}</p>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="empty">No reviews yet. Be the first to write one.</p>
+  {% endfor %}
+</section>
+{% endblock %}

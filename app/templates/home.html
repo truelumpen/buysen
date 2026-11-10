@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "base.html" import product_card %}
+
+{% block content %}
+<h1>Shop all products</h1>
+
+{% if products %}
+<div class="grid">
+  {% for p in products %}
+  {{ product_card(p) }}
+  {% endfor %}
+</div>
+{% else %}
+<p class="empty">The store is empty. Load the catalog to see products here.</p>
+{% endif %}
+{% endblock %}
