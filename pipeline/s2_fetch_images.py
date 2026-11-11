@@ -14,7 +14,7 @@ from tqdm import tqdm
 DATA_DIR = Path(__file__).parent.parent / "data"
 CATALOG_PATH = DATA_DIR / "catalog.jsonl"
 IMAGES_DIR = DATA_DIR / "images"
-WORKERS = 16
+WORKERS = 16 # Parallel downloads 
 
 
 def download(product):
@@ -39,7 +39,7 @@ def main():
         products = [json.loads(line) for line in f]
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
-    # A pool of threads to execute calls asynchronously.
+    # A pool of threads to execute calls concurrently.
     with ThreadPoolExecutor(max_workers=WORKERS) as pool:
         results = list(tqdm(pool.map(download, products), total=len(products), desc="Images"))
 
