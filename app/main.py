@@ -68,8 +68,22 @@ def category_page(request: Request, name: str, user_id: int | None = Cookie(defa
     if not products:
         raise HTTPException(status_code=404, detail="Category not found")
     user = _current_user(user_id)
-    return _render(request, "listing.html", user, category=name, products=products)
+    return _render(request, "listing.html", user, heading=name, products=products)
 
+@app.get("/search")
+def search(request: Request, q: str = "", user_id: int | None = Cookie(default=None)):
+    query = q.strip()
+    if not query:
+        return _redirect("/")
+    user = _current_user(user_id)
+    return _render(
+        request,
+        "listing.html",
+        user,
+        heading=f"Results for “{query}”",
+        query=query,
+        products=db.search_products(query),
+    )
 
 @app.get("/product/{product_id}")
 def product_page(request: Request, product_id: int, user_id: int | None = Cookie(default=None)):

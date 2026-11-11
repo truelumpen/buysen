@@ -322,3 +322,36 @@ button:hover {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 }
+
+/* Search box in the header */
+
+.search {
+  display: flex;
+  flex: 1 1 280px;
+  max-width: 600px;
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.45rem 0.75rem;
+  border: none;
+  border-radius: 6px 0 0 6px;
+  font: inherit;
+}
+
+.search button {
+  border: none;
+  border-radius: 0 6px 6px 0;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.search button:hover {
+  background: var(--accent-dark);
+}
+
+button {
+  white-space: nowrap;
+}

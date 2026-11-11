@@ -1,5 +1,6 @@
 """All database access for Cloneazon."""
 
+import re
 import sqlite3
 from contextlib import (
     closing,  #ensure that resources are automatically and safely closed upon exiting the block, even if errors occur.
@@ -110,6 +111,25 @@ def recommend_for_user(user_id, limit=5):
         (*favourites, user_id, limit),
     )
 
+def search_products(query, limit=48):
+    """Products matching every word of `query`, most relevant first."""
+    words = re.findall(r"\w+", query.lower())
+    if not words:
+        return []
+    # Quote each word so characters like " or * can't break the FTS5 syntax.
+    # The * after the last word also matches unfinished words ("headph").
+    match = " ".join(f'"{word}"' for word in words) + "*"
+    return _read(
+        """
+        SELECT products.*
+        FROM products_fts
+        JOIN products ON products.id = products_fts.rowid
+        WHERE products_fts MATCH ?
+        ORDER BY bm25(products_fts, 10.0, 1.0), products.times_bought DESC
+        LIMIT ?
+        """,
+        (match, limit),
+    )
 
 def get_product(product_id):
     rows = _read("SELECT * FROM products WHERE id = ?", (product_id,))

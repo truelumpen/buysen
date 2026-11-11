@@ -26,6 +26,10 @@
   <header class="site-header">
     <div class="header-top">
       <a class="brand" href="/">Cloneazon</a>
+      <form class="search" method="get" action="/search" role="search">
+        <input type="search" name="q" value="{{ query or '' }}" placeholder="Search Cloneazon" aria-label="Search products">
+        <button type="submit">Search</button>
+      </form>
       {% if user %}
       <a class="purchases-link" href="/bought">Your purchases</a>
       <form class="user-switch" method="post" action="/logout">

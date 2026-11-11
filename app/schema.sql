@@ -43,6 +43,18 @@ CREATE TABLE IF NOT EXISTS similar_items (
     PRIMARY KEY (product_id, method, rank)
 );
 
+-- Full-text search index over product text. "External content" means it reads
+-- title and description_ straight from products and stores only a word index,
+-- so no data is duplicated. Rebuild it after loading products:
+--   INSERT INTO products_fts(products_fts) VALUES ('rebuild');
+CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts5(
+    title,
+    description_,
+    content = 'products',
+    content_rowid = 'id',
+    tokenize = 'porter unicode61'
+);
+
 CREATE INDEX IF NOT EXISTS idx_events_user      ON events(user_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_product  ON reviews(product_id);
 CREATE INDEX IF NOT EXISTS idx_products_popular ON products(times_bought);
