@@ -29,6 +29,15 @@
     <p class="muted">Log in to buy this product.</p>
     {% endif %}
 
+    {% if product['features'] %}
+    <h3>About this item</h3>
+    <ul class="features">
+      {% for bullet in product['features'].split('\n') %}
+      <li>{{ bullet }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
     {% if product['description_'] %}
     <p class="description">{{ product['description_'] }}</p>
     {% endif %}

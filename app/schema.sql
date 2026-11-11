@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS products (
     id          INTEGER PRIMARY KEY,
     title       TEXT    NOT NULL,
     description_ TEXT    NOT NULL DEFAULT '',
+    features    TEXT    NOT NULL DEFAULT '',
     price_cents INTEGER NOT NULL CHECK (price_cents >= 0),
     category    TEXT    NOT NULL,
     image_path  TEXT    NOT NULL,
@@ -49,6 +50,7 @@ CREATE TABLE IF NOT EXISTS similar_items (
 --   INSERT INTO products_fts(products_fts) VALUES ('rebuild');
 CREATE VIRTUAL TABLE IF NOT EXISTS products_fts USING fts5(
     title,
+    features,
     description_,
     content = 'products',
     content_rowid = 'id',

@@ -125,7 +125,7 @@ def search_products(query, limit=48):
         FROM products_fts
         JOIN products ON products.id = products_fts.rowid
         WHERE products_fts MATCH ?
-        ORDER BY bm25(products_fts, 10.0, 1.0), products.times_bought DESC
+        ORDER BY bm25(products_fts, 10.0, 3.0, 1.0), products.times_bought DESC
         LIMIT ?
         """,
         (match, limit),
