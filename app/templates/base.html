@@ -26,6 +26,16 @@
   <header class="site-header">
     <div class="header-top">
       <a class="brand" href="/">Cloneazon</a>
+      <details class="categories-menu">
+        <summary>☰ Categories</summary>
+        <nav class="categories-panel" aria-label="Categories">
+          {% for c in categories %}
+          <a href="/category/{{ c|urlencode }}">{{ c }}</a>
+          {% else %}
+          <span class="muted">No categories yet</span>
+          {% endfor %}
+        </nav>
+      </details>
       <form class="search" method="get" action="/search" role="search">
         <input type="search" name="q" value="{{ query or '' }}" placeholder="Search Cloneazon" aria-label="Search products">
         <button type="submit">Search</button>
@@ -45,11 +55,6 @@
       </form>
       {% endif %}
     </div>
-    <nav class="category-nav">
-      {% for c in categories %}
-      <a href="/category/{{ c|urlencode }}">{{ c }}</a>
-      {% endfor %}
-    </nav>
   </header>
 
   <main class="container">
