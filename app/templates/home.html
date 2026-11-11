@@ -1,16 +1,48 @@
 {% extends "base.html" %}
-{% from "base.html" import product_card %}
+{% from "base.html" import product_card with context %}
 
 {% block content %}
-<h1>Shop all products</h1>
+<section class="home-section">
+  <h2>Items for you</h2>
+  {% if not user %}
+  <p class="empty">Log in to see picks chosen for you.</p>
+  {% elif for_you %}
+  <div class="grid">
+    {% for p in for_you %}
+    {{ product_card(p) }}
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">Your personal picks will appear here.</p>
+  {% endif %}
+</section>
 
-{% if products %}
-<div class="grid">
-  {% for p in products %}
-  {{ product_card(p) }}
+<section class="home-section">
+  <h2>Popular items</h2>
+  {% if popular %}
+  <div class="grid">
+    {% for p in popular %}
+    {{ product_card(p) }}
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">The most bought products will appear here.</p>
+  {% endif %}
+</section>
+
+<section class="home-section">
+  <h2>Shop by category</h2>
+  {% for category, products in shelves %}
+  <div class="shelf">
+    <h3><a href="/category/{{ category|urlencode }}">{{ category }}</a></h3>
+    <div class="grid">
+      {% for p in products %}
+      {{ product_card(p) }}
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <p class="empty">Your top three categories will appear here.</p>
   {% endfor %}
-</div>
-{% else %}
-<p class="empty">The store is empty. Load the catalog to see products here.</p>
-{% endif %}
+</section>
 {% endblock %}

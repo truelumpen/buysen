@@ -8,12 +8,13 @@ CREATE TABLE IF NOT EXISTS products (
     category    TEXT    NOT NULL,
     image_path  TEXT    NOT NULL,
     rating      REAL    CHECK (rating BETWEEN 1 AND 5),
+    times_bought INTEGER NOT NULL DEFAULT 0 CHECK (times_bought >= 0),
     created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS users (
     id           INTEGER PRIMARY KEY,
-    name_        TEXT    NOT NULL
+    name_        TEXT    NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS events (
@@ -44,3 +45,4 @@ CREATE TABLE IF NOT EXISTS similar_items (
 
 CREATE INDEX IF NOT EXISTS idx_events_user      ON events(user_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_product  ON reviews(product_id);
+CREATE INDEX IF NOT EXISTS idx_products_popular ON products(times_bought);

@@ -7,7 +7,7 @@
   <img src="/{{ p['image_path'] }}" alt="{{ p['title'] }}" loading="lazy">
   <span class="card-title">{{ p['title'] }}</span>
   {% if p['rating'] is not none %}
-  <span class="stars">{{ stars(p['rating']|round|int) }}</span>
+  <span><span class="stars">{{ stars(p['rating']|round|int) }}</span> <span class="muted">({{ "{:,}".format(p['times_bought']) }})</span></span>
   {% endif %}
   <span class="price">{{ price(p['price_cents']) }}</span>
 </a>
@@ -26,16 +26,20 @@
   <header class="site-header">
     <div class="header-top">
       <a class="brand" href="/">Cloneazon</a>
+      {% if user %}
       <a class="purchases-link" href="/bought">Your purchases</a>
-      <form class="user-switch" method="post" action="/switch-user">
-        <label for="user-select">Browsing as</label>
-        <select id="user-select" name="user_id">
-          {% for u in users %}
-          <option value="{{ u['id'] }}" {% if u['id'] == user_id %}selected{% endif %}>{{ u['name_'] }}</option>
-          {% endfor %}
-        </select>
-        <button type="submit">Switch</button>
+      <form class="user-switch" method="post" action="/logout">
+        <span>{{ user['name_'] }}</span>
+        <button type="submit">Log out</button>
       </form>
+      {% else %}
+      <form class="user-switch" method="post" action="/login">
+        <input type="hidden" name="next" value="{{ request.url.path }}">
+        <label for="username">Username</label>
+        <input id="username" name="username" required maxlength="40" autocomplete="username">
+        <button type="submit">Log in</button>
+      </form>
+      {% endif %}
     </div>
     <nav class="category-nav">
       {% for c in categories %}

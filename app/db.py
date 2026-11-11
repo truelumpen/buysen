@@ -35,8 +35,18 @@ def init_db():
         conn.executescript(schema)
 
 
-def list_users():
-    return _read("SELECT * FROM users ORDER BY id")
+def get_user(user_id):
+    rows = _read("SELECT * FROM users WHERE id = ?", (user_id,))
+    return rows[0] if rows else None
+
+
+def get_or_create_user(name):
+    """Log in as `name`, creating the account the first time that name is used."""
+    with closing(_connect()) as conn:
+        # OR IGNORE: if the name already exists (UNIQUE), skip the insert instead of failing.
+        conn.execute("INSERT OR IGNORE INTO users (name_) VALUES (?)", (name,))
+        conn.commit()
+        return conn.execute("SELECT * FROM users WHERE name_ = ?", (name,)).fetchone()
 
 
 def list_categories():
@@ -45,11 +55,59 @@ def list_categories():
 
 
 def list_products(category=None, limit=24):
+    """Most popular products first, optionally only from one category."""
     if category is None:
-        return _read("SELECT * FROM products ORDER BY id LIMIT ?", (limit,))
+        return _read(
+            "SELECT * FROM products ORDER BY times_bought DESC, id LIMIT ?",
+            (limit,),
+        )
     return _read(
-        "SELECT * FROM products WHERE category = ? ORDER BY id LIMIT ?",
+        "SELECT * FROM products WHERE category = ? ORDER BY times_bought DESC, id LIMIT ?",
         (category, limit),
+    )
+
+def popular_categories():
+    """All categories, most bought first."""
+    rows = _read(
+        "SELECT category FROM products GROUP BY category ORDER BY SUM(times_bought) DESC"
+    )
+    return [row["category"] for row in rows]
+
+
+def top_categories(user_id, limit=3):
+    """The categories this user interacts with most, topped up with popular ones."""
+    rows = _read(
+        """
+        SELECT products.category
+        FROM events
+        JOIN products ON products.id = events.product_id
+        WHERE events.user_id = ?
+        GROUP BY products.category
+        ORDER BY COUNT(*) DESC
+        """,
+        (user_id,),
+    )
+    categories = [row["category"] for row in rows]
+    for category in popular_categories():
+        if category not in categories:
+            categories.append(category)
+    return categories[:limit]
+
+
+def recommend_for_user(user_id, limit=5):
+    """Placeholder until the Phase 3 model: popular items from the user's
+    favourite categories that they haven't bought yet."""
+    favourites = top_categories(user_id)
+    placeholders = ", ".join("?" for _ in favourites)
+    return _read(
+        f"""
+        SELECT * FROM products
+        WHERE category IN ({placeholders})
+          AND id NOT IN (SELECT product_id FROM events WHERE user_id = ? AND kind = 'buy')
+        ORDER BY rating DESC, times_bought DESC
+        LIMIT ?
+        """,
+        (*favourites, user_id, limit),
     )
 
 

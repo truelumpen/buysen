@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "base.html" import product_card, price, stars %}
+{% from "base.html" import product_card, price, stars with context %}
 
 {% block title %}{{ product['title'] }} · Cloneazon{% endblock %}
 
@@ -17,12 +17,17 @@
       {{ "%.1f"|format(product['rating']) }} out of 5
     </p>
     {% endif %}
+    <p class="muted">{{ "{:,}".format(product['times_bought']) }} bought</p>
 
     <p class="price price-large">{{ price(product['price_cents']) }}</p>
 
+    {% if user %}
     <form method="post" action="/product/{{ product['id'] }}/buy">
       <button type="submit" class="button-primary">Buy now</button>
     </form>
+    {% else %}
+    <p class="muted">Log in to buy this product.</p>
+    {% endif %}
 
     {% if product['description_'] %}
     <p class="description">{{ product['description_'] }}</p>
@@ -44,6 +49,7 @@
 <section class="reviews">
   <h2>Reviews ({{ reviews|length }})</h2>
 
+  {% if user %}
   <form class="review-form" method="post" action="/product/{{ product['id'] }}/review">
     <h3>Write a review</h3>
     <label for="rating">Rating</label>
@@ -56,6 +62,9 @@
     <textarea id="text" name="text" rows="4"></textarea>
     <button type="submit">Submit review</button>
   </form>
+  {% else %}
+  <p class="muted">Log in to write a review.</p>
+  {% endif %}
 
   {% for r in reviews %}
   <div class="review">

@@ -73,6 +73,7 @@ dependencies = [
     { name = "python-multipart" },
     { name = "requests" },
     { name = "sentence-transformers" },
+    { name = "tqdm" },
     { name = "uvicorn" },
 ]
 
@@ -89,6 +90,7 @@ requires-dist = [
     { name = "python-multipart" },
     { name = "requests" },
     { name = "sentence-transformers" },
+    { name = "tqdm", specifier = ">=4.66.5" },
     { name = "uvicorn" },
 ]
 
