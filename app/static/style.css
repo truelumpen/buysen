@@ -404,3 +404,17 @@ button {
 .features li {
   margin: 0.25rem 0;
 }
+
+/* Home page sections: the heading with the ‹ › arrows on its right */
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.page-arrows {
+  display: flex;
+  gap: 0.5rem;
+}

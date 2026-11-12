@@ -1,45 +1,58 @@
 {% extends "base.html" %}
 {% from "base.html" import product_card with context %}
 
+{# ‹ › buttons for one section. ‹ starts hidden; › shows only if a next page exists. #}
+{% macro arrows(has_next) %}
+<span class="page-arrows">
+  <button type="button" class="page-button prev" aria-label="Previous items" hidden>‹</button>
+  <button type="button" class="page-button next" aria-label="Next items" {% if not has_next %}hidden{% endif %}>›</button>
+</span>
+{% endmacro %}
+
+{% macro grid(products) %}
+<div class="grid">
+  {% for p in products %}
+  {{ product_card(p) }}
+  {% endfor %}
+</div>
+{% endmacro %}
+
 {% block content %}
+{% if user %}
 <section class="home-section">
-  <h2>Items for you</h2>
-  {% if not user %}
-  <p class="empty">Log in to see picks chosen for you.</p>
-  {% elif for_you %}
-  <div class="grid">
-    {% for p in for_you %}
-    {{ product_card(p) }}
-    {% endfor %}
+  {% if for_you %}
+  <div class="paged" data-kind="for_you" data-category="" data-page="1">
+    <div class="section-header"><h2>Items for You</h2>{{ arrows(for_you_more) }}</div>
+    {{ grid(for_you) }}
   </div>
   {% else %}
+  <h2>Items for You</h2>
   <p class="empty">Your personal picks will appear here.</p>
   {% endif %}
 </section>
+{% endif %}
 
 <section class="home-section">
-  <h2>Popular items</h2>
   {% if popular %}
-  <div class="grid">
-    {% for p in popular %}
-    {{ product_card(p) }}
-    {% endfor %}
+  <div class="paged" data-kind="popular" data-category="" data-page="1">
+    <div class="section-header"><h2>Popular items</h2>{{ arrows(popular_more) }}</div>
+    {{ grid(popular) }}
   </div>
   {% else %}
+  <h2>Popular items</h2>
   <p class="empty">The most bought products will appear here.</p>
   {% endif %}
 </section>
 
 <section class="home-section">
   <h2>Shop by category</h2>
-  {% for category, products in shelves %}
-  <div class="shelf">
-    <h3><a href="/category/{{ category|urlencode }}">{{ category }}</a></h3>
-    <div class="grid">
-      {% for p in products %}
-      {{ product_card(p) }}
-      {% endfor %}
+  {% for category, products, has_next in shelves %}
+  <div class="shelf paged" data-kind="category" data-category="{{ category }}" data-page="1">
+    <div class="section-header">
+      <h3><a href="/category/{{ category|urlencode }}">{{ category }}</a></h3>
+      {{ arrows(has_next) }}
     </div>
+    {{ grid(products) }}
   </div>
   {% else %}
   <p class="empty">Your top three categories will appear here.</p>

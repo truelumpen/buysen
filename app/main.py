@@ -1,8 +1,9 @@
 """Web routes for Cloneazon."""
 
 from contextlib import asynccontextmanager
+from typing import Literal
 
-from fastapi import Cookie, FastAPI, Form, HTTPException, Request
+from fastapi import Cookie, FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -11,6 +12,8 @@ from app import db
 
 LOGIN_DAYS = 30
 
+# How many products each home page section shows per page.
+PAGE_SIZES = {"for_you": 5, "popular": 10, "category": 5}
 
 @asynccontextmanager
 async def lifespan(app):
@@ -22,6 +25,8 @@ app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=db.APP_DIR / "static", check_dir=False), name="static")
 app.mount("/images", StaticFiles(directory=db.DB_PATH.parent / "images", check_dir=False), name="images")
 templates = Jinja2Templates(directory=db.APP_DIR / "templates")
+# Using the updated css file every time
+templates.env.globals["version"] = lambda name: int((db.APP_DIR / "static" / name).stat().st_mtime)
 
 
 def _current_user(user_id):
@@ -41,6 +46,18 @@ def _product_or_404(product_id):
         raise HTTPException(status_code=404, detail="Product not found")
     return product
 
+def _section_items(kind, user, category="", page=1):
+    """One page of a home page section, and whether a next page exists."""
+    size = PAGE_SIZES[kind]
+    offset = (page - 1) * size
+    # Ask for one extra product: if it comes back, there is a next page.
+    if kind == "for_you":
+        items = db.recommend_for_user(user["id"], limit=size + 1, offset=offset) if user else []
+    elif kind == "popular":
+        items = db.list_products(limit=size + 1, offset=offset)
+    else:
+        items = db.list_products(category=category, limit=size + 1, offset=offset)
+    return items[:size], len(items) > size
 
 def _redirect(url):
     # 303 tells the browser to follow up with a GET, so refreshing never resubmits a form.
@@ -51,14 +68,38 @@ def _redirect(url):
 def home(request: Request, user_id: int | None = Cookie(default=None)):
     user = _current_user(user_id)
     user_key = user["id"] if user else None
-    shelves = [(c, db.list_products(category=c, limit=5)) for c in db.top_categories(user_key)]
+    for_you, for_you_more = _section_items("for_you", user)
+    popular, popular_more = _section_items("popular", user)
+    # Each shelf is (category, its first page of products, whether there are more).
+    shelves = [(c, *_section_items("category", user, c)) for c in db.top_categories(user_key)]
     return _render(
         request,
         "home.html",
         user,
-        for_you=db.recommend_for_user(user["id"]) if user else [],
-        popular=db.list_products(limit=10),
+        for_you=for_you,
+        for_you_more=for_you_more,
+        popular=popular,
+        popular_more=popular_more,
         shelves=shelves,
+    )
+
+
+@app.get("/section")
+def section(
+    request: Request,
+    kind: Literal["for_you", "popular", "category"],
+    page: int = Query(default=1, ge=1),
+    category: str = "",
+    user_id: int | None = Cookie(default=None),
+):
+    """Just the product cards of one page of a home section, for the ‹ › arrows."""
+    user = _current_user(user_id)
+    products, has_next = _section_items(kind, user, category, page)
+    return templates.TemplateResponse(
+        request,
+        "cards.html",
+        {"products": products},
+        headers={"X-Has-Next": "1" if has_next else "0"},
     )
 
 

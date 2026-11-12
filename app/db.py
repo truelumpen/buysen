@@ -55,16 +55,17 @@ def list_categories():
     return [row["category"] for row in rows]
 
 
-def list_products(category=None, limit=24):
-    """Most popular products first, optionally only from one category."""
+def list_products(category=None, limit=24, offset=0):
+    """Most popular products first, optionally only from one category.
+    `offset` skips that many products, which is how pages 2, 3, ... are fetched."""
     if category is None:
         return _read(
-            "SELECT * FROM products ORDER BY times_bought DESC, id LIMIT ?",
-            (limit,),
+            "SELECT * FROM products ORDER BY times_bought DESC, id LIMIT ? OFFSET ?",
+            (limit, offset),
         )
     return _read(
-        "SELECT * FROM products WHERE category = ? ORDER BY times_bought DESC, id LIMIT ?",
-        (category, limit),
+        "SELECT * FROM products WHERE category = ? ORDER BY times_bought DESC, id LIMIT ? OFFSET ?",
+        (category, limit, offset),
     )
 
 def popular_categories():
@@ -95,20 +96,21 @@ def top_categories(user_id, limit=3):
     return categories[:limit]
 
 
-def recommend_for_user(user_id, limit=5):
+def recommend_for_user(user_id, limit=5, offset=0):
     """Placeholder until the Phase 3 model: popular items from the user's
     favourite categories that they haven't bought yet."""
     favourites = top_categories(user_id)
     placeholders = ", ".join("?" for _ in favourites)
+    # Paging needs a fixed order, and without a final tie-breaker, products with equal ratings could swap places between requests, appearing twice or never.
     return _read(
         f"""
         SELECT * FROM products
         WHERE category IN ({placeholders})
           AND id NOT IN (SELECT product_id FROM events WHERE user_id = ? AND kind = 'buy')
-        ORDER BY rating DESC, times_bought DESC
-        LIMIT ?
+        ORDER BY rating DESC, times_bought DESC, id
+        LIMIT ? OFFSET ?
         """,
-        (*favourites, user_id, limit),
+        (*favourites, user_id, limit, offset), 
     )
 
 def search_products(query, limit=48):

@@ -20,7 +20,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Cloneazon{% endblock %}</title>
   <link rel="icon" href="/static/logo.svg">
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v={{ version('style.css') }}">
 </head>
 <body>
   <header class="site-header">
@@ -69,6 +69,25 @@
     document.addEventListener("click", (event) => {
       const menu = document.querySelector(".categories-menu");
       if (menu && !menu.contains(event.target)) menu.open = false;
+    });
+
+    // Home page arrows: load the previous or next page of a section without reloading.
+    document.addEventListener("click", async (event) => {
+      const button = event.target.closest(".page-button");
+      if (!button) return;
+      const section = button.closest(".paged");
+      const page = Number(section.dataset.page) + (button.classList.contains("next") ? 1 : -1);
+      const params = new URLSearchParams({
+        kind: section.dataset.kind,
+        category: section.dataset.category,
+        page: page,
+      });
+      const response = await fetch(`/section?${params}`);
+      if (!response.ok) return; // keep the current cards if something went wrong
+      section.querySelector(".grid").innerHTML = await response.text();
+      section.dataset.page = page;
+      section.querySelector(".prev").hidden = page === 1;
+      section.querySelector(".next").hidden = response.headers.get("X-Has-Next") !== "1";
     });
   </script>
 </body>
