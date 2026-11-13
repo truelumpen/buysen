@@ -418,3 +418,14 @@ button {
   display: flex;
   gap: 0.5rem;
 }
+
+/* "Show more" button under category and search results */
+
+.show-more {
+  display: block;
+  margin: 1.5rem auto 0;
+}
+
+.show-more[hidden] {
+  display: none; /* display: block above would otherwise override the hidden attribute */
+}

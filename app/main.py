@@ -9,11 +9,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app import db
+from recsys import personalize
 
 LOGIN_DAYS = 30
 
 # How many products each home page section shows per page.
-PAGE_SIZES = {"for_you": 5, "popular": 10, "category": 5, "related": 5}
+PAGE_SIZES = {"for_you": 5, "popular": 10, "category": 5, "related": 5, "listing": 24, "search": 24}
 
 @asynccontextmanager
 async def lifespan(app):
@@ -46,28 +47,33 @@ def _product_or_404(product_id):
         raise HTTPException(status_code=404, detail="Product not found")
     return product
 
-def _section_items(kind, user, category="", page=1, product=None):
+def _section_items(kind, user, category="", page=1, product=None, query=""):
     """One page of a home page section, and whether a next page exists."""
     size = PAGE_SIZES[kind]
     offset = (page - 1) * size
     # Ask for one extra product: if it comes back, there is a next page.
     if kind == "for_you":
-        items = db.recommend_for_user(user["id"], limit=size + 1, offset=offset) if user else []
+        items = personalize.recommend(user["id"], limit=size + 1, offset=offset) if user else []
     elif kind == "popular":
         items = db.list_products(limit=size + 1, offset=offset)
     elif kind == "related":
         # Related lists are short, so fetch everything up to this page and slice.
         items = _related_items(product, limit=offset + size + 1)[offset:]
-    else:
+    elif kind == "listing":
         items = db.list_products(category=category, limit=size + 1, offset=offset)
+    elif kind == "search":
+        items = db.search_products(query, limit=size + 1, offset=offset)
+    else:
+        user_key = user["id"] if user else None
+        items = personalize.recommend(user_key, limit=size + 1, offset=offset, category=category)
     return items[:size], len(items) > size
 
 def _related_items(product, limit=10):
-    """Products related to `product`. Placeholder until Phase 3 fills similar_items:
-    the most popular other products from the same category."""
-    related = db.get_similar(product["id"], "hybrid", limit=limit)
-    if related:
-        return related
+    # Best available source first: hybrid (Phase 3), then content, then the placeholder.
+    for method in ("hybrid", "content"):
+        related = db.get_similar(product["id"], method, limit=limit)
+        if related:
+            return related
     same_category = db.list_products(category=product["category"], limit=limit + 1)
     return [p for p in same_category if p["id"] != product["id"]][:limit]
 
@@ -83,7 +89,7 @@ def home(request: Request, user_id: int | None = Cookie(default=None)):
     for_you, for_you_more = _section_items("for_you", user)
     popular, popular_more = _section_items("popular", user)
     # Each shelf is (category, its first page of products, whether there are more).
-    shelves = [(c, *_section_items("category", user, c)) for c in db.top_categories(user_key)]
+    shelves = [(c, *_section_items("category", user, c)) for c in personalize.top_categories(user_key)]
     return _render(
         request,
         "home.html",
@@ -100,16 +106,17 @@ def home(request: Request, user_id: int | None = Cookie(default=None)):
 @app.get("/section")
 def section(
     request: Request,
-    kind: Literal["for_you", "popular", "category", "related"], # Kind must be one of three strings
+    kind: Literal["for_you", "popular", "category", "related", "listing", "search"], # Kind must be one of three strings
     page: int = Query(default=1, ge=1), # Page must be a number greater or equal 1, default 1
     category: str = "", # Has to be a string, default ""
     product: int | None = None,  # the product whose related items are paged
+    query: str = "",  # the search text, for search result pages
     user_id: int | None = Cookie(default=None),
 ):
     """Just the product cards of one page of a home section, for the ‹ › arrows."""
     user = _current_user(user_id)
     related_to = _product_or_404(product) if kind == "related" else None
-    products, has_next = _section_items(kind, user, category, page, related_to)
+    products, has_next =  _section_items(kind, user, category, page, related_to, query)
     return templates.TemplateResponse(
         request,
         "cards.html",
@@ -120,11 +127,20 @@ def section(
 
 @app.get("/category/{name}")
 def category_page(request: Request, name: str, user_id: int | None = Cookie(default=None)):
-    products = db.list_products(category=name)
+    user = _current_user(user_id)
+    products, has_more = _section_items("listing", user, category=name)
     if not products:
         raise HTTPException(status_code=404, detail="Category not found")
-    user = _current_user(user_id)
-    return _render(request, "listing.html", user, heading=name, products=products)
+    return _render(
+        request,
+        "listing.html",
+        user,
+        heading=name,
+        kind="listing",
+        category=name,
+        products=products,
+        has_more=has_more,
+    )
 
 @app.get("/search")
 def search(request: Request, q: str = "", user_id: int | None = Cookie(default=None)):
@@ -132,13 +148,16 @@ def search(request: Request, q: str = "", user_id: int | None = Cookie(default=N
     if not query:
         return _redirect("/")
     user = _current_user(user_id)
+    products, has_more = _section_items("search", user, query=query)
     return _render(
         request,
         "listing.html",
         user,
         heading=f"Results for “{query}”",
+        kind="search",
         query=query,
-        products=db.search_products(query),
+        products=products,
+        has_more=has_more,
     )
 
 @app.get("/product/{product_id}")

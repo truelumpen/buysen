@@ -94,6 +94,20 @@
       section.querySelector(".prev").hidden = page === 1;
       section.querySelector(".next").hidden = response.headers.get("X-Has-Next") !== "1";
     });
+
+    // Category and search pages: "Show more" adds the next page of products below.
+    document.addEventListener("click", async (event) => {
+      const button = event.target.closest(".show-more");
+      if (!button) return;
+      const section = button.closest(".paged");
+      const page = Number(section.dataset.page) + 1;
+      const params = new URLSearchParams({ ...section.dataset, page: page });
+      const response = await fetch(`/section?${params}`);
+      if (!response.ok) return; // keep what is shown if something went wrong
+      section.querySelector(".grid").insertAdjacentHTML("beforeend", await response.text());
+      section.dataset.page = page;
+      button.hidden = response.headers.get("X-Has-Next") !== "1";
+    });
   </script>
 </body>
 </html>

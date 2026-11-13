@@ -113,7 +113,7 @@ def recommend_for_user(user_id, limit=5, offset=0):
         (*favourites, user_id, limit, offset), 
     )
 
-def search_products(query, limit=48):
+def search_products(query, limit=24, offset=0):
     """Products matching every word of `query`, most relevant first."""
     words = re.findall(r"\w+", query.lower())
     if not words:
@@ -128,9 +128,31 @@ def search_products(query, limit=48):
         JOIN products ON products.id = products_fts.rowid
         WHERE products_fts MATCH ?
         ORDER BY bm25(products_fts, 10.0, 3.0, 1.0), products.times_bought DESC
+        LIMIT ? OFFSET ?
+        """,
+        (match, limit, offset),
+    )
+
+def get_products(ids):
+    """The products with these ids, in the same order as `ids`."""
+    if not ids:
+        return []
+    placeholders = ", ".join("?" for _ in ids)
+    rows = _read(f"SELECT * FROM products WHERE id IN ({placeholders})", ids)
+    by_id = {row["id"]: row for row in rows}
+    return [by_id[i] for i in ids if i in by_id]
+
+
+def get_user_history(user_id, limit=50):
+    """The user's most recent views and buys, newest first."""
+    return _read(
+        """
+        SELECT product_id, kind FROM events
+        WHERE user_id = ?
+        ORDER BY created_at DESC, id DESC
         LIMIT ?
         """,
-        (match, limit),
+        (user_id, limit),
     )
 
 def get_product(product_id):
@@ -177,6 +199,19 @@ def get_similar(product_id, method, limit=6):
         (product_id, method, limit),
     )
 
+def replace_similar(method, rows):
+    """Replace every similar_items row of one method, in a single transaction.
+    `rows` are (product_id, similar_id, score, rank) tuples."""
+    with closing(_connect()) as conn:
+        conn.execute("DELETE FROM similar_items WHERE method = ?", (method,))
+        conn.executemany(
+            """
+            INSERT INTO similar_items (product_id, similar_id, method, score, rank)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            [(product_id, similar_id, method, score, rank) for product_id, similar_id, score, rank in rows],
+        )
+        conn.commit()
 
 def add_review(product_id, user_id, rating, text):
     text = (text or "").strip() or None
