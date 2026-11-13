@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "base.html" import product_card, price, stars with context %}
+{% from "base.html" import product_card, price, stars, arrows with context %}
 
 {% block title %}{{ product['title'] }} · Cloneazon{% endblock %}
 
@@ -44,17 +44,6 @@
   </div>
 </article>
 
-{% if similar %}
-<section class="similar">
-  <h2>Customers also liked</h2>
-  <div class="grid">
-    {% for p in similar %}
-    {{ product_card(p) }}
-    {% endfor %}
-  </div>
-</section>
-{% endif %}
-
 <section class="reviews">
   <h2>Reviews ({{ reviews|length }})</h2>
 
@@ -89,5 +78,21 @@
   {% else %}
   <p class="empty">No reviews yet. Be the first to write one.</p>
   {% endfor %}
+</section>
+
+<section class="related">
+  {% if related %}
+  <div class="paged" data-kind="related" data-product="{{ product['id'] }}" data-page="1">
+    <div class="section-header"><h2>Related items</h2>{{ arrows(related_more) }}</div>
+    <div class="grid">
+      {% for p in related %}
+      {{ product_card(p) }}
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <h2>Related items</h2>
+  <p class="empty">Related items will appear here.</p>
+  {% endif %}
 </section>
 {% endblock %}

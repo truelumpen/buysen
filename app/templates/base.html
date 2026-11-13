@@ -13,6 +13,14 @@
 </a>
 {% endmacro -%}
 
+{# ‹ › buttons for one section. ‹ starts hidden; › shows only if a next page exists. #}
+{% macro arrows(has_next) %}
+<span class="page-arrows">
+  <button type="button" class="page-button prev" aria-label="Previous items" hidden>‹</button>
+  <button type="button" class="page-button next" aria-label="Next items" {% if not has_next %}hidden{% endif %}>›</button>
+</span>
+{% endmacro -%}
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -77,11 +85,8 @@
       if (!button) return;
       const section = button.closest(".paged");
       const page = Number(section.dataset.page) + (button.classList.contains("next") ? 1 : -1);
-      const params = new URLSearchParams({
-        kind: section.dataset.kind,
-        category: section.dataset.category,
-        page: page,
-      });
+      // Send every data-* value of the section (kind, category, product, ...) plus the new page.
+      const params = new URLSearchParams({ ...section.dataset, page: page });
       const response = await fetch(`/section?${params}`);
       if (!response.ok) return; // keep the current cards if something went wrong
       section.querySelector(".grid").innerHTML = await response.text();

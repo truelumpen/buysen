@@ -13,7 +13,7 @@ from app import db
 LOGIN_DAYS = 30
 
 # How many products each home page section shows per page.
-PAGE_SIZES = {"for_you": 5, "popular": 10, "category": 5}
+PAGE_SIZES = {"for_you": 5, "popular": 10, "category": 5, "related": 5}
 
 @asynccontextmanager
 async def lifespan(app):
@@ -46,7 +46,7 @@ def _product_or_404(product_id):
         raise HTTPException(status_code=404, detail="Product not found")
     return product
 
-def _section_items(kind, user, category="", page=1):
+def _section_items(kind, user, category="", page=1, product=None):
     """One page of a home page section, and whether a next page exists."""
     size = PAGE_SIZES[kind]
     offset = (page - 1) * size
@@ -55,9 +55,21 @@ def _section_items(kind, user, category="", page=1):
         items = db.recommend_for_user(user["id"], limit=size + 1, offset=offset) if user else []
     elif kind == "popular":
         items = db.list_products(limit=size + 1, offset=offset)
+    elif kind == "related":
+        # Related lists are short, so fetch everything up to this page and slice.
+        items = _related_items(product, limit=offset + size + 1)[offset:]
     else:
         items = db.list_products(category=category, limit=size + 1, offset=offset)
     return items[:size], len(items) > size
+
+def _related_items(product, limit=10):
+    """Products related to `product`. Placeholder until Phase 3 fills similar_items:
+    the most popular other products from the same category."""
+    related = db.get_similar(product["id"], "hybrid", limit=limit)
+    if related:
+        return related
+    same_category = db.list_products(category=product["category"], limit=limit + 1)
+    return [p for p in same_category if p["id"] != product["id"]][:limit]
 
 def _redirect(url):
     # 303 tells the browser to follow up with a GET, so refreshing never resubmits a form.
@@ -83,18 +95,21 @@ def home(request: Request, user_id: int | None = Cookie(default=None)):
         shelves=shelves,
     )
 
-
+# Handle types validation
+# The signature of the page
 @app.get("/section")
 def section(
     request: Request,
-    kind: Literal["for_you", "popular", "category"],
-    page: int = Query(default=1, ge=1),
-    category: str = "",
+    kind: Literal["for_you", "popular", "category", "related"], # Kind must be one of three strings
+    page: int = Query(default=1, ge=1), # Page must be a number greater or equal 1, default 1
+    category: str = "", # Has to be a string, default ""
+    product: int | None = None,  # the product whose related items are paged
     user_id: int | None = Cookie(default=None),
 ):
     """Just the product cards of one page of a home section, for the ‹ › arrows."""
     user = _current_user(user_id)
-    products, has_next = _section_items(kind, user, category, page)
+    related_to = _product_or_404(product) if kind == "related" else None
+    products, has_next = _section_items(kind, user, category, page, related_to)
     return templates.TemplateResponse(
         request,
         "cards.html",
@@ -132,13 +147,15 @@ def product_page(request: Request, product_id: int, user_id: int | None = Cookie
     user = _current_user(user_id)
     if user:
         db.add_event(user["id"], product_id, "view")
+    related, related_more = _section_items("related", user, product=product)
     return _render(
         request,
         "product.html",
         user,
         product=product,
         reviews=db.get_reviews(product_id),
-        similar=db.get_similar(product_id, "hybrid"),
+        related=related,
+        related_more=related_more,
     )
 
 
@@ -184,6 +201,9 @@ def login(username: str = Form(), next: str = Form(default="/")):
         return _redirect(next)
     user = db.get_or_create_user(username)
     response = _redirect(next)
+    # httponly=True means JavaScript on the page can't read the cookie
+    # It's a defence against cross-site scripting (XSS)
+    # if an attacker ever got script onto your page, they couldn't steal the login cookie
     response.set_cookie("user_id", str(user["id"]), max_age=LOGIN_DAYS * 24 * 3600, httponly=True)
     return response
 

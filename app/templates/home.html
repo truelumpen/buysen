@@ -1,13 +1,5 @@
 {% extends "base.html" %}
-{% from "base.html" import product_card with context %}
-
-{# ‹ › buttons for one section. ‹ starts hidden; › shows only if a next page exists. #}
-{% macro arrows(has_next) %}
-<span class="page-arrows">
-  <button type="button" class="page-button prev" aria-label="Previous items" hidden>‹</button>
-  <button type="button" class="page-button next" aria-label="Next items" {% if not has_next %}hidden{% endif %}>›</button>
-</span>
-{% endmacro %}
+{% from "base.html" import product_card, arrows with context %}
 
 {% macro grid(products) %}
 <div class="grid">
