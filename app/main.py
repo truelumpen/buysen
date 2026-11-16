@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app import db
-from recsys import personalize
+from recsys import personalize, semantic
 
 LOGIN_DAYS = 30
 
@@ -19,6 +19,7 @@ PAGE_SIZES = {"for_you": 5, "popular": 10, "category": 5, "related": 5, "listing
 @asynccontextmanager
 async def lifespan(app):
     db.init_db()
+    semantic.load() # Load the CLIP once at startup
     yield
 
 
@@ -62,7 +63,7 @@ def _section_items(kind, user, category="", page=1, product=None, query=""):
     elif kind == "listing":
         items = db.list_products(category=category, limit=size + 1, offset=offset)
     elif kind == "search":
-        items = db.search_products(query, limit=size + 1, offset=offset)
+        items = semantic.hybrid_search(query, limit=size + 1, offset=offset)
     else:
         user_key = user["id"] if user else None
         items = personalize.recommend(user_key, limit=size + 1, offset=offset, category=category)

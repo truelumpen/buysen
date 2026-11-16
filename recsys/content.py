@@ -1,8 +1,7 @@
 """Phase 3, step 2: Related items by content similarity.
 
 For every product, find the TOP_K products whose CLIP vectors are closest and save
-them to similar_items with method='content'. When both products have a real photo
-they are compared mostly by image; if either has no photo, by text only.
+them to similar_items with method='content'.
 
 Run from the project root:  uv run python -m recsys.content
 Needs data/embeddings.npz, written by recsys.embed.

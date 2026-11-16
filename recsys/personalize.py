@@ -12,7 +12,7 @@ import numpy as np
 
 from app import db
 
-# --- Settings to experiment with ---------------------------------------------
+# --- Settings -----------------------------------------------------------------
 BUY_WEIGHT = 3.0       # a purchase shapes the taste this many times more than a view
 VIEW_WEIGHT = 1.0
 HISTORY_LENGTH = 50    # only the most recent events count, so taste follows the user
