@@ -1,4 +1,4 @@
-"""Phase 3, step 3: personal recommendations from a user's views and buys.
+"""Personal recommendations from a user's views and buys.
 
 A user's "taste" is the weighted average of the vectors of products they recently
 viewed and bought. Every product is scored against that taste, so the home page
@@ -6,6 +6,7 @@ viewed and bought. Every product is scored against that taste, so the home page
 Users with no history get the most-bought fallbacks from db.py.
 """
 
+# makes a function remember its result
 from functools import cache
 
 import numpy as np

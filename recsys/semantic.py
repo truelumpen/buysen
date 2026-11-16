@@ -1,4 +1,4 @@
-"""Phase 3, step 4: search by meaning, merged with keyword search.
+"""Search by meaning, merged with keyword search.
 
 CLIP turns the typed query into a vector and compares it with every product's
 image and text vectors, so "gift for a gamer" can find controllers even when
