@@ -43,6 +43,17 @@ def _catalog():
         "image": data["image"],
     }
 
+def scores_for_history(rows, weights):
+    """Score every product against a history: the catalog rows of the products the
+    user touched, each with a weight. Shared by the website and recsys.evaluate."""
+    catalog = _catalog()
+    # Taste = weighted sum of the history's vectors (scale doesn't matter for ranking).
+    weights = np.array(weights)[:, None]
+    taste_text = (catalog["text"][rows] * weights).sum(axis=0)
+    taste_image = (catalog["image"][rows] * weights).sum(axis=0)
+    return (1 - IMAGE_WEIGHT) * (catalog["text"] @ taste_text) + IMAGE_WEIGHT * (
+        catalog["image"] @ taste_image
+    )
 
 def ranked_products(user_id):
     """Every product id, best match first, excluding ones the user bought.
@@ -60,15 +71,7 @@ def ranked_products(user_id):
             weights.append(kind_weight * recency)
     if not rows:
         return None
-
-    # Taste = weighted sum of the history's vectors (scale doesn't matter for ranking).
-    weights = np.array(weights)[:, None]
-    taste_text = (catalog["text"][rows] * weights).sum(axis=0)
-    taste_image = (catalog["image"][rows] * weights).sum(axis=0)
-    scores = (1 - IMAGE_WEIGHT) * (catalog["text"] @ taste_text) + IMAGE_WEIGHT * (
-        catalog["image"] @ taste_image
-    )
-
+    scores = scores_for_history(rows, weights)
     bought = {p["id"] for p in db.get_bought(user_id)}
     order = np.argsort(-scores)
     return [catalog["ids"][i] for i in order if catalog["ids"][i] not in bought]
