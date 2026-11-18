@@ -83,11 +83,14 @@
 <section class="related">
   {% if related %}
   <div class="paged" data-kind="related" data-product="{{ product['id'] }}" data-page="1">
-    <div class="section-header"><h2>Related items</h2>{{ arrows(related_more) }}</div>
-    <div class="grid">
-      {% for p in related %}
-      {{ product_card(p) }}
-      {% endfor %}
+    <h2>Related items</h2>
+    <div class="row-frame">
+      {{ arrows(related_more) }}
+      <div class="grid">
+        {% for p in related %}
+        {{ product_card(p) }}
+        {% endfor %}
+      </div>
     </div>
   </div>
   {% else %}

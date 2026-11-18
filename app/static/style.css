@@ -405,18 +405,33 @@ button {
   margin: 0.25rem 0;
 }
 
-/* Home page sections: the heading with the ‹ › arrows on its right */
+/* Section rows: round ‹ › arrows float on the left and right edges of the cards */
 
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+.row-frame {
+  position: relative; /* the arrows are placed relative to this box */
 }
 
-.page-arrows {
-  display: flex;
-  gap: 0.5rem;
+.page-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%); /* centre the button on the row's middle */
+  z-index: 2;
+  width: 3rem;
+  height: 3rem;
+  padding: 0 0 0.2rem;
+  border-radius: 50%;
+  font-size: 2rem;
+  line-height: 1;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.page-button.prev {
+  left: -1rem;
+}
+
+.page-button.next {
+  right: -1rem;
 }
 
 /* "Show more" button under category and search results */
@@ -428,4 +443,88 @@ button {
 
 .show-more[hidden] {
   display: none; /* display: block above would otherwise override the hidden attribute */
+}
+
+/* Header: brand, categories, search and account stay on one line */
+
+.header-top {
+  flex-wrap: nowrap;
+  gap: 1rem;
+  max-width: none; /* the header spans the whole window, like large stores do */
+  padding: 0.75rem 1.5rem;
+}
+
+.brand,
+.categories-menu,
+.purchases-link {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.search {
+  flex: 1 1 auto; /* search takes all the space left between the logo and the account */
+  min-width: 12rem;
+  max-width: none;
+  margin-right: 0;
+}
+
+.user-switch {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.user-switch input {
+  width: 8rem;
+  min-width: 0;
+  padding: 0.45rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+}
+
+/* Long usernames are cut short with "..." instead of breaking the header */
+.username {
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Narrower screens: search moves to its own full-width row under the rest */
+@media (max-width: 900px) {
+  .header-top {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .search {
+    order: 1; /* placed after everything else */
+    flex-basis: 100%;
+    max-width: none;
+    margin-right: 0;
+  }
+
+  .user-switch {
+    margin-left: auto; /* account controls stay on the right */
+  }
+}
+
+/* Phones: smaller arrows */
+@media (max-width: 700px) {
+  .purchases-link {
+    font-size: 0.9rem;
+  }
+
+  .page-button {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.6rem;
+  }
+
+  .page-button.prev {
+    left: -0.5rem;
+  }
+
+  .page-button.next {
+    right: -0.5rem;
+  }
 }

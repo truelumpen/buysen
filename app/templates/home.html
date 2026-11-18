@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 {% from "base.html" import product_card, arrows with context %}
 
-{% macro grid(products) %}
-<div class="grid">
-  {% for p in products %}
-  {{ product_card(p) }}
-  {% endfor %}
+{# A row of cards with the ‹ › arrows on its left and right edges. #}
+{% macro grid(products, has_next) %}
+<div class="row-frame">
+  {{ arrows(has_next) }}
+  <div class="grid">
+    {% for p in products %}
+    {{ product_card(p) }}
+    {% endfor %}
+  </div>
 </div>
 {% endmacro %}
 
@@ -14,8 +18,8 @@
 <section class="home-section">
   {% if for_you %}
   <div class="paged" data-kind="for_you" data-category="" data-page="1">
-    <div class="section-header"><h2>Items for You</h2>{{ arrows(for_you_more) }}</div>
-    {{ grid(for_you) }}
+    <h2>Items for You</h2>
+    {{ grid(for_you, for_you_more) }}
   </div>
   {% else %}
   <h2>Items for You</h2>
@@ -27,8 +31,8 @@
 <section class="home-section">
   {% if popular %}
   <div class="paged" data-kind="popular" data-category="" data-page="1">
-    <div class="section-header"><h2>Popular items</h2>{{ arrows(popular_more) }}</div>
-    {{ grid(popular) }}
+    <h2>Popular items</h2>
+    {{ grid(popular, popular_more) }}
   </div>
   {% else %}
   <h2>Popular items</h2>
@@ -40,11 +44,8 @@
   <h2>Shop by category</h2>
   {% for category, products, has_next in shelves %}
   <div class="shelf paged" data-kind="category" data-category="{{ category }}" data-page="1">
-    <div class="section-header">
-      <h3><a href="/category/{{ category|urlencode }}">{{ category }}</a></h3>
-      {{ arrows(has_next) }}
-    </div>
-    {{ grid(products) }}
+    <h3><a href="/category/{{ category|urlencode }}">{{ category }}</a></h3>
+    {{ grid(products, has_next) }}
   </div>
   {% else %}
   <p class="empty">Your top three categories will appear here.</p>

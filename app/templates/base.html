@@ -51,14 +51,13 @@
       {% if user %}
       <a class="purchases-link" href="/bought">Your purchases</a>
       <form class="user-switch" method="post" action="/logout">
-        <span>{{ user['name_'] }}</span>
+        <span class="username" title="{{ user['name_'] }}">{{ user['name_'] }}</span>
         <button type="submit">Log out</button>
       </form>
       {% else %}
       <form class="user-switch" method="post" action="/login">
         <input type="hidden" name="next" value="{{ request.url.path }}">
-        <label for="username">Username</label>
-        <input id="username" name="username" required maxlength="40" autocomplete="username">
+        <input id="username" name="username" placeholder="Username" aria-label="Username" required maxlength="40" autocomplete="username">
         <button type="submit">Log in</button>
       </form>
       {% endif %}
