@@ -28,6 +28,15 @@
 </section>
 {% endif %}
 
+{% if bought_with %}
+<section class="home-section">
+  <div class="paged" data-kind="bought_with" data-product="{{ last_bought['id'] }}" data-page="1">
+    <h2>People buy with <a href="/product/{{ last_bought['id'] }}">{{ last_bought['title']|truncate(50) }}</a></h2>
+    {{ grid(bought_with, bought_with_more) }}
+  </div>
+</section>
+{% endif %}
+
 <section class="home-section">
   {% if popular %}
   <div class="paged" data-kind="popular" data-category="" data-page="1">

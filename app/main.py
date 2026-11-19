@@ -14,8 +14,7 @@ from recsys import personalize, semantic
 LOGIN_DAYS = 30
 
 # How many products each home page section shows per page.
-PAGE_SIZES = {"for_you": 5, "popular": 10, "category": 5, "related": 5, "listing": 24, "search": 24}
-
+PAGE_SIZES = {"for_you": 5, "popular": 10, "category": 5, "related": 5, "listing": 24, "search": 24, "bought_with": 5}
 @asynccontextmanager
 async def lifespan(app):
     db.init_db()
@@ -64,6 +63,8 @@ def _section_items(kind, user, category="", page=1, product=None, query=""):
         items = db.list_products(category=category, limit=size + 1, offset=offset)
     elif kind == "search":
         items = semantic.hybrid_search(query, limit=size + 1, offset=offset)
+    elif kind == "bought_with":
+        items = db.bought_with(product["id"], limit=size + 1, offset=offset)
     else:
         user_key = user["id"] if user else None
         items = personalize.recommend(user_key, limit=size + 1, offset=offset, category=category)
@@ -88,6 +89,12 @@ def home(request: Request, user_id: int | None = Cookie(default=None)):
     user = _current_user(user_id)
     user_key = user["id"] if user else None
     for_you, for_you_more = _section_items("for_you", user)
+    # The user's most recent purchase (get_bought lists newest first), if any.
+    purchases = db.get_bought(user["id"]) if user else []
+    last_bought = purchases[0] if purchases else None
+    bought_with, bought_with_more = (
+        _section_items("bought_with", user, product=last_bought) if last_bought else ([], False)
+    )
     popular, popular_more = _section_items("popular", user)
     # Each shelf is (category, its first page of products, whether there are more).
     shelves = [(c, *_section_items("category", user, c)) for c in personalize.top_categories(user_key)]
@@ -97,6 +104,9 @@ def home(request: Request, user_id: int | None = Cookie(default=None)):
         user,
         for_you=for_you,
         for_you_more=for_you_more,
+        last_bought=last_bought,
+        bought_with=bought_with,
+        bought_with_more=bought_with_more,
         popular=popular,
         popular_more=popular_more,
         shelves=shelves,
@@ -107,7 +117,7 @@ def home(request: Request, user_id: int | None = Cookie(default=None)):
 @app.get("/section")
 def section(
     request: Request,
-    kind: Literal["for_you", "popular", "category", "related", "listing", "search"], # Kind must be one of three strings
+    kind: Literal["for_you", "popular", "category", "related", "listing", "search", "bought_with"], # Kind must be one of three strings
     page: int = Query(default=1, ge=1), # Page must be a number greater or equal 1, default 1
     category: str = "", # Has to be a string, default ""
     product: int | None = None,  # the product whose related items are paged
@@ -116,7 +126,7 @@ def section(
 ):
     """Just the product cards of one page of a home section, for the ‹ › arrows."""
     user = _current_user(user_id)
-    related_to = _product_or_404(product) if kind == "related" else None
+    related_to = _product_or_404(product) if kind in ("related", "bought_with") else None
     products, has_next =  _section_items(kind, user, category, page, related_to, query)
     return templates.TemplateResponse(
         request,

@@ -33,7 +33,7 @@ CATEGORIES = {
     "Office_Products": "Office Products",
     "Pet_Supplies": "Pet Supplies",
 }
-TOTAL_ITEMS = 3_000
+TOTAL_ITEMS = 5_000
 SEED = 42
 
 

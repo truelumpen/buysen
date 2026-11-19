@@ -185,6 +185,30 @@ def get_bought(user_id):
         (user_id,),
     )
 
+def bought_with(product_id, limit=5, offset=0):
+    """Products bought by the other shoppers who bought `product_id`:
+    "people who bought this also bought". Products bought on the same trip
+    (within a day) rank first, then ones bought at any time fill the row."""
+    return _read(
+        """
+        SELECT products.*,
+               COUNT(DISTINCT CASE
+                   WHEN ABS(julianday(other.created_at) - julianday(mine.created_at)) < 1
+                   THEN other.user_id END) AS same_trip,
+               COUNT(DISTINCT other.user_id) AS any_time
+        FROM events AS mine
+        JOIN events AS other
+          ON other.user_id = mine.user_id
+         AND other.kind = 'buy'
+         AND other.product_id != mine.product_id
+        JOIN products ON products.id = other.product_id
+        WHERE mine.kind = 'buy' AND mine.product_id = ?
+        GROUP BY products.id
+        ORDER BY same_trip DESC, any_time DESC, products.id
+        LIMIT ? OFFSET ?
+        """,
+        (product_id, limit, offset),
+    )
 
 def get_similar(product_id, method, limit=6):
     return _read(
