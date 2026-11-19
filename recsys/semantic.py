@@ -6,13 +6,10 @@ those words aren't in the title. The meaning ranking and the keyword (FTS5)
 ranking are merged with Reciprocal Rank Fusion, which combines ranks, not scores.
 """
 
-# makes a function remember its result
-from functools import cache
-
 import numpy as np
-from sentence_transformers import SentenceTransformer
 
 from app import db
+from recsys import embed
 
 # --- Settings -------------------------------------------------
 QUERY_IMAGE_WEIGHT = 1.0   # 1 = match the query to product photos only (tested best: CLIP's text-to-text
@@ -24,44 +21,25 @@ MIN_SIMILARITY = 0.27      # meaning matches weaker than this are dropped (real 
 RRF_K = 60                 # Reciprocal Rank Fusion constant: larger = rank differences matter less
 # --------------------------------------------------------------
 
-MODEL_NAME = "clip-ViT-B-32"
-EMBEDDINGS_PATH = db.DB_PATH.parent / "embeddings.npz"
-
-
-@cache
-def _model():
-    """The CLIP model, loaded once and kept in memory."""
-    model = SentenceTransformer(MODEL_NAME)
-    model.max_seq_length = 77
-    return model
-
-
-@cache
-def _vectors():
-    """The product vectors from recsys.embed (None if not built yet)."""
-    if not EMBEDDINGS_PATH.exists():
-        return None
-    data = np.load(EMBEDDINGS_PATH)
-    return [int(i) for i in data["ids"]], data["text"], data["image"], data["has_image"]
-
 def load():
-    """Load the model and vectors up front, so the first search isn't slow."""
-    if _vectors() is not None:
-        _model()
+    """Load the vectors and CLIP up front, so the first search isn't slow."""
+    if embed.load_embeddings() is not None:
+        embed.load_model()
 
 
 def meaning_ranking(query):
     """Product ids ranked by how close their meaning is to the query."""
-    vectors = _vectors()
+    vectors = embed.load_embeddings()
     if vectors is None:
         return []
-    ids, text, image, _ = vectors
-    query_vector = _model().encode(query, normalize_embeddings=True)
+    query_vector = embed.load_model().encode(query, normalize_embeddings=True)
     # Products without a photo have an all-zero image vector, so their image score is 0:
     # they get no meaning match from photos, but keyword search still finds them.
-    scores = QUERY_IMAGE_WEIGHT * (image @ query_vector) + (1 - QUERY_IMAGE_WEIGHT) * (text @ query_vector)
+    scores = QUERY_IMAGE_WEIGHT * (vectors["image"] @ query_vector) + (1 - QUERY_IMAGE_WEIGHT) * (
+        vectors["text"] @ query_vector
+    )
     best = np.argsort(-scores)[:SEMANTIC_CANDIDATES]
-    return [ids[i] for i in best if scores[i] >= MIN_SIMILARITY]
+    return [vectors["ids"][i] for i in best if scores[i] >= MIN_SIMILARITY]
 
 
 def hybrid_search(query, limit=24, offset=0):

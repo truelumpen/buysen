@@ -12,6 +12,7 @@ from functools import cache
 import numpy as np
 
 from app import db
+from recsys import embed
 
 # --- Settings -----------------------------------------------------------------
 BUY_WEIGHT = 3.0       # a purchase shapes the taste this many times more than a view
@@ -23,24 +24,19 @@ HALF_LIFE = 7          # every N newer events halve an older event's influence (
 CATEGORY_DEPTH = 50    # categories are ranked by how many of the user's top N products they hold
 # ------------------------------------------------------------------------------
 
-EMBEDDINGS_PATH = db.DB_PATH.parent / "embeddings.npz"
 
 
 @cache
 def _catalog():
-    """Load the product vectors once and keep them in memory (None if not built yet).
-    After re-running recsys.embed, restart the server to pick up the new file."""
-    if not EMBEDDINGS_PATH.exists():
+    """The shared product vectors plus two lookups personalisation needs:
+    product id -> row in the vectors, and product id -> category. None if not built yet."""
+    vectors = embed.load_embeddings()
+    if vectors is None:
         return None
-    data = np.load(EMBEDDINGS_PATH)
-    ids = [int(i) for i in data["ids"]]
-    category = {p["id"]: p["category"] for p in db.list_products(limit=-1)}
     return {
-        "ids": ids,
-        "row": {product_id: row for row, product_id in enumerate(ids)},
-        "category": category,
-        "text": data["text"],
-        "image": data["image"],
+        **vectors,
+        "row": {product_id: row for row, product_id in enumerate(vectors["ids"])},
+        "category": {p["id"]: p["category"] for p in db.list_products(limit=-1)},
     }
 
 def scores_for_history(rows, weights):

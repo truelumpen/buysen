@@ -10,8 +10,8 @@ Needs data/embeddings.npz, written by recsys.embed.
 import numpy as np
 
 from app import db
+from recsys import embed
 
-EMBEDDINGS_PATH = db.DB_PATH.parent / "embeddings.npz"
 IMAGE_WEIGHT = 0.1  # share of image similarity when both products have a photo
 TOP_K = 30
 
@@ -38,7 +38,7 @@ def top_k(similarity, k=TOP_K):
 
 
 def main():
-    data = np.load(EMBEDDINGS_PATH)
+    data = embed.load_embeddings()
     ids = data["ids"]
     similarity = similarity_matrix(data["text"], data["image"], data["has_image"])
     neighbours = top_k(similarity)

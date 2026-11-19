@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 
 from app import db
-from recsys import content, personalize, semantic
+from recsys import content, embed, personalize, semantic
 from recsys.metrics import category_agreement, coverage
 
 # --- Settings to experiment with ---------------------------------------------
@@ -31,9 +31,9 @@ REPORT_PATH = Path(__file__).parent.parent / "reports" / "evaluation.md"
 
 def load_data():
     """The saved vectors, plus each product's category in the same row order."""
-    data = np.load(content.EMBEDDINGS_PATH)
+    data = embed.load_embeddings()
     category_of = {p["id"]: p["category"] for p in db.list_products(limit=-1)}
-    categories = np.array([category_of[int(i)] for i in data["ids"]])
+    categories = np.array([category_of[i] for i in data["ids"]])
     return data, categories
 
 

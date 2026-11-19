@@ -9,6 +9,8 @@ Run from the project root:  uv run python -m recsys.embed
 Output: data/embeddings.npz (ids, text, image, has_image), rows in the same order.
 """
 
+from functools import cache
+
 import numpy as np
 from PIL import Image
 from sentence_transformers import SentenceTransformer
@@ -20,7 +22,30 @@ EMBEDDINGS_PATH = db.DB_PATH.parent / "embeddings.npz"
 FEATURES_IN_TEXT = 3  # CLIP only reads ~77 tokens, so keep the text short
 BATCH_SIZE = 32
 
+@cache
+def load_model():
+    """The CLIP model, loaded once per process and kept in memory."""
+    model = SentenceTransformer(MODEL_NAME)
+    # CLIP's text side stops at 77 tokens; longer text is cut off, not rejected.
+    model.max_seq_length = 77
+    return model
 
+
+@cache
+def load_embeddings():
+    """The saved vectors, read once per process and shared by every recsys module.
+    None if this script hasn't run yet. Restart the server after re-embedding."""
+    if not EMBEDDINGS_PATH.exists():
+        return None
+    data = np.load(EMBEDDINGS_PATH)
+    return {
+        "ids": [int(i) for i in data["ids"]],
+        "text": data["text"],
+        "image": data["image"],
+        "has_image": data["has_image"],
+    }
+
+    
 def product_text(product):
     """Title plus the first few feature bullets: the most informative words first."""
     bullets = [b for b in product["features"].split("\n") if b][:FEATURES_IN_TEXT]
@@ -47,9 +72,7 @@ def main():
     # The "No image" placeholder lives in static/, real photos in data/images/.
     has_image = np.array([p["image_path"].startswith("images/") for p in products])
 
-    model = SentenceTransformer(MODEL_NAME)
-    # CLIP's text side stops at 77 tokens; longer text is cut off, not rejected.
-    model.max_seq_length = 77
+    model = load_model()
 
     text = model.encode(
         [product_text(p) for p in products],
