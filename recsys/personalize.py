@@ -76,10 +76,10 @@ def ranked_products(user_id):
 def recommend(user_id, limit=5, offset=0, category=None):
     """One page of personal picks, optionally only from one category."""
     ranked = ranked_products(user_id)
-    if ranked is None:  # no history yet: fall back to the simple versions
-        if category:
+    if ranked is None:  # no history yet
+        if category:  # category shelves show that category's bestsellers
             return db.list_products(category=category, limit=limit, offset=offset)
-        return db.recommend_for_user(user_id, limit=limit, offset=offset)
+        return []  # Items for You shows its "picks will appear here" message
     if category:
         ranked = [i for i in ranked if _catalog()["category"][i] == category]
     return db.get_products(ranked[offset : offset + limit])
@@ -88,8 +88,8 @@ def recommend(user_id, limit=5, offset=0, category=None):
 def top_categories(user_id, limit=TOP_CATEGORIES):
     """The user's best categories: the ones most common among their top matches."""
     ranked = ranked_products(user_id)
-    if ranked is None:
-        return db.top_categories(user_id, limit)
+    if ranked is None:  # no history yet: the most bought categories
+        return db.popular_categories()[:limit]
     counts = {}
     for product_id in ranked[:CATEGORY_DEPTH]:
         category = _catalog()["category"][product_id]
