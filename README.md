@@ -67,19 +67,39 @@ flowchart LR
 Requires [uv](https://docs.astral.sh/uv/). It installs Python 3.12 and the exact package
 versions from `uv.lock` by itself, with CPU-only PyTorch (no GPU needed).
 
+### Quick start: prebuilt data (about 10 minutes)
+
+The [`data-v1` release](https://github.com/truelumpen/cloneazon/releases/tag/data-v1)
+holds the finished database, CLIP embeddings and catalog (29 MB). Product photos are not
+redistributed; `s2` downloads them from the dataset's links.
+
 ```bash
+git clone https://github.com/truelumpen/cloneazon.git
+cd cloneazon
 uv sync
 
-# Build the data (about 30-45 minutes, mostly downloads; free, no API keys)
+# Unpacks into data/: cloneazon.db, embeddings.npz, catalog.jsonl
+curl -L https://github.com/truelumpen/cloneazon/releases/download/data-v1/cloneazon-data-v1.tar.gz | tar -xz
+
+uv run python pipeline/s2_fetch_images.py         # product photos (~5 minutes)
+uv run uvicorn app.main:app
+```
+
+### Full rebuild: from the raw dataset (about 30-45 minutes)
+
+Free, no API keys; mostly downloading. Produces exactly the data in the release.
+
+```bash
+uv sync
 uv run python pipeline/s1_fetch_catalog.py        # 5,000 products, stratified sample
 uv run python pipeline/s2_fetch_images.py         # product photos
 uv run python -m pipeline.s3_load_db              # SQLite database + search index
 uv run python -m pipeline.s4_simulate_shoppers    # 1,000 simulated shoppers
 uv run python -m recsys.build                     # CLIP vectors + related items
-
-# Run the store
 uv run uvicorn app.main:app
 ```
+
+### Use it
 
 Open http://127.0.0.1:8000, log in with any username (no password), and browse.
 Log in as `shopper-0001` to see a shopper with history.
