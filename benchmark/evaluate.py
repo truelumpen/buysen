@@ -1,9 +1,11 @@
-"""Phase 3 evaluation: measure the recommenders and write reports/evaluation.md.
+"""Evaluation: measure the recommenders and write reports/evaluation.md.
 
-Run from the project root:  uv run python -m recsys.evaluate
+Run from the project root, after the pipeline (s1-s4) and recsys.build:
+    uv run python -m benchmark.evaluate
 Takes a few seconds (plus ~5 s to load CLIP for the search table).
 """
 
+import json
 import random
 from datetime import date
 from pathlib import Path
@@ -11,6 +13,7 @@ from pathlib import Path
 import numpy as np
 
 from app import db
+from pipeline import s4_simulate_shoppers as s4
 from recsys import content, embed, personalize, semantic
 from recsys.metrics import category_agreement, coverage
 
@@ -24,6 +27,7 @@ REAL_QUERIES = [
     "kitchen gadgets", "toys for toddlers", "hiking gear", "office desk organizer",
 ]
 NONSENSE_QUERIES = ["zzzzqqq", "asdf jkl", "xkcd lorem ipsum"]
+ROW_SIZE = 5           # cards in one "People buy with" row
 # ------------------------------------------------------------------------------
 
 REPORT_PATH = Path(__file__).parent.parent / "reports" / "evaluation.md"
@@ -91,12 +95,45 @@ def search_table():
     return lines
 
 
+def bought_with_table():
+    """People buy with: do purchases alone rediscover the complement pairs
+    that the simulated shoppers (s4) were generated from?"""
+    goes_with = {}  # product id -> its true complements (pairs work both ways)
+    with s4.COMPLEMENTS_PATH.open() as f:
+        for line in f:
+            row = json.loads(line)
+            for complement in row["complements"]:
+                goes_with.setdefault(row["product_id"], set()).add(complement["id"])
+                goes_with.setdefault(complement["id"], set()).add(row["product_id"])
+
+    rng = random.Random(SEED)
+    all_ids = [p["id"] for p in db.list_products(limit=-1)]
+    methods = {
+        "People buy with (co-purchases)": lambda p: [x["id"] for x in db.bought_with(p, limit=ROW_SIZE)],
+        "Related items (similar products)": lambda p: [x["id"] for x in db.get_similar(p, "content", limit=ROW_SIZE)],
+        "Random products": lambda p: [i for i in rng.sample(all_ids, ROW_SIZE + 1) if i != p][:ROW_SIZE],
+    }
+    lines = [
+        f"| Row of {ROW_SIZE} from | Rows with a true complement | Shown products that are complements |",
+        "|---|---|---|",
+    ]
+    for name, row_for in methods.items():
+        hits = found = 0
+        for product_id, truth in goes_with.items():
+            shown = row_for(product_id)
+            matches = len(set(shown) & truth)
+            hits += matches > 0
+            found += matches
+        lines.append(f"| {name} | {hits / len(goes_with):.0%} | {found / (ROW_SIZE * len(goes_with)):.0%} |")
+    return lines
+
+
 def main():
     data, categories = load_data()
     report = [
         "# Cloneazon evaluation (Phase 3)",
         "",
-        (f"Generated {date.today()} by `uv run python -m recsys.evaluate` "
+        (f"Generated {date.today()} by `uv run python -m benchmark.evaluate` "
         f"on {len(categories):,} products. Random choices use seed {SEED}."),
         "",
         "## 1. Related items",
@@ -127,6 +164,18 @@ def main():
         f"(QUERY_IMAGE_WEIGHT = {semantic.QUERY_IMAGE_WEIGHT}). Keyword matches are not counted here."),
         "",
         *search_table(),
+        "",
+        "## 4. People buy with (co-purchases)",
+        "",
+        ("complements_data/complements.jsonl lists which products go together; the simulated "
+        "shoppers (pipeline/s4) bought along those pairs, plus random noise. For every product that "
+        f"has complements, we take a row of {ROW_SIZE} and check how many true complements it shows."),
+        "",
+        *bought_with_table(),
+        "",
+        ("The shoppers were generated from these pairs, so this shows the method recovers the "
+        "pattern in the data, not how real shoppers would behave. Similar products (Related items) "
+        "are a useful contrast: they rarely are complements."),
         "",
     ]
     REPORT_PATH.parent.mkdir(exist_ok=True)

@@ -1,6 +1,6 @@
 # Cloneazon evaluation (Phase 3)
 
-Generated 2026-11-18 by `uv run python -m recsys.evaluate` on 4,999 products. Random choices use seed 42.
+Generated 2026-11-20 by `uv run python -m benchmark.evaluate` on 4,999 products. Random choices use seed 42.
 
 ## 1. Related items
 
@@ -53,3 +53,15 @@ Matches above MIN_SIMILARITY = 0.27 (QUERY_IMAGE_WEIGHT = 1.0). Keyword matches 
 | zzzzqqq | nonsense | 1 | Chubby Spotted Seal Pillow Stuffed Cotton Plush Animal Toy C |
 | asdf jkl | nonsense | 0 | none |
 | xkcd lorem ipsum | nonsense | 0 | none |
+
+## 4. People buy with (co-purchases)
+
+complements_data/complements.jsonl lists which products go together; the simulated shoppers (pipeline/s4) bought along those pairs, plus random noise. For every product that has complements, we take a row of 5 and check how many true complements it shows.
+
+| Row of 5 from | Rows with a true complement | Shown products that are complements |
+|---|---|---|
+| People buy with (co-purchases) | 50% | 18% |
+| Related items (similar products) | 27% | 7% |
+| Random products | 1% | 0% |
+
+The shoppers were generated from these pairs, so this shows the method recovers the pattern in the data, not how real shoppers would behave. Similar products (Related items) are a useful contrast: they rarely are complements.
