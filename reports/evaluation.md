@@ -44,12 +44,12 @@ Matches above MIN_SIMILARITY = 0.27 (QUERY_IMAGE_WEIGHT = 1.0). Keyword matches 
 | Query | Type | Meaning matches | Best meaning match |
 |---|---|---|---|
 | gift for a gamer | real | 12 | Fischertechnik Dynamic M Set |
-| something to keep my dog busy | real | 26 | Durable Dog Toys for Aggressive Chewers, Indestructible Dog  |
+| something to keep my dog busy | real | 25 | Durable Dog Toys for Aggressive Chewers, Indestructible Dog  |
 | cozy winter outfit | real | 5 | Century Star Women's Fuzzy Hoodies Sport Pullover Hoodie Ath |
-| kitchen gadgets | real | 35 | MegaChoice Stainless Steel Pot Rack with Shelf & 6pcs Hooks  |
+| kitchen gadgets | real | 36 | MegaChoice Stainless Steel Pot Rack with Shelf & 6pcs Hooks  |
 | toys for toddlers | real | 18 | Wooden Baby Toys Activity Cube 6-in-1 Play Center Bead Maze  |
 | hiking gear | real | 6 | WEPLAN Skateboard Backpack for Men,Water Resistant Laptop Ba |
-| office desk organizer | real | 34 | Orcaa Multi-Function Pen Holder / Modern Desk Lamp with USB  |
+| office desk organizer | real | 33 | Orcaa Multi-Function Pen Holder / Modern Desk Lamp with USB  |
 | zzzzqqq | nonsense | 1 | Chubby Spotted Seal Pillow Stuffed Cotton Plush Animal Toy C |
 | asdf jkl | nonsense | 0 | none |
 | xkcd lorem ipsum | nonsense | 0 | none |
