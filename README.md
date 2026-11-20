@@ -64,30 +64,36 @@ flowchart LR
 
 ## Run it
 
-Requires [uv](https://docs.astral.sh/uv/). It installs Python 3.12 and the exact package
-versions from `uv.lock` by itself, with CPU-only PyTorch (no GPU needed).
+### Quick start: Docker
 
-### Quick start: prebuilt data (about 10 minutes)
-
-The [`data-v1` release](https://github.com/truelumpen/cloneazon/releases/tag/data-v1)
-holds the finished database, CLIP embeddings and catalog (29 MB). Product photos are not
-redistributed; `s2` downloads them from the dataset's links.
+Requires [Docker](https://docs.docker.com/get-docker/). Nothing else: Python, the
+packages and the CLIP model are inside the image.
 
 ```bash
 git clone https://github.com/truelumpen/cloneazon.git
 cd cloneazon
-uv sync
-
-# Unpacks into data/: cloneazon.db, embeddings.npz, catalog.jsonl
-curl -L https://github.com/truelumpen/cloneazon/releases/download/data-v1/cloneazon-data-v1.tar.gz | tar -xz
-
-uv run python pipeline/s2_fetch_images.py         # product photos (~5 minutes)
-uv run uvicorn app.main:app
+docker build -t cloneazon .
+docker run -p 8000:8000 -v cloneazon-data:/app/data cloneazon
 ```
 
-### Full rebuild: from the raw dataset (about 30-45 minutes)
+Open http://127.0.0.1:8000 when the log shows `Uvicorn running`.
 
-Free, no API keys; mostly downloading. Produces exactly the data in the release.
+- **First start (about 5 minutes):** the container downloads the prebuilt data from the
+  [`data-v1` release](https://github.com/truelumpen/cloneazon/releases/tag/data-v1)
+  (database, CLIP embeddings and catalog, 29 MB) and then the product photos from the
+  dataset's links. Photos are not redistributed in the release.
+- **Later starts (seconds):** the data stays in the `cloneazon-data` volume.
+- Uses about 500 MB of memory while running; the image is about 3 GB (mostly PyTorch and CLIP).
+
+Log in with any username (no password) and browse. Log in as `shopper-0001` to see a
+shopper with history.
+
+### Rebuild the data from scratch (about 30-45 minutes)
+
+Rebuilds everything the release contains, straight from the raw dataset: free, no API
+keys, mostly downloading. Requires [uv](https://docs.astral.sh/uv/), which installs
+Python 3.12 and the exact package versions from `uv.lock` by itself, with CPU-only
+PyTorch (no GPU needed).
 
 ```bash
 uv sync
@@ -96,23 +102,13 @@ uv run python pipeline/s2_fetch_images.py         # product photos
 uv run python -m pipeline.s3_load_db              # SQLite database + search index
 uv run python -m pipeline.s4_simulate_shoppers    # 1,000 simulated shoppers
 uv run python -m recsys.build                     # CLIP vectors + related items
-uv run uvicorn app.main:app
-```
-
-### Use it
-
-Open http://127.0.0.1:8000, log in with any username (no password), and browse.
-Log in as `shopper-0001` to see a shopper with history.
-
-Check and measure:
-
-```bash
 uv run python -m pytest                           # tests
 uv run python -m benchmark.evaluate               # writes reports/evaluation.md
+uv run uvicorn app.main:app                       # the store at http://127.0.0.1:8000
 ```
 
 Everything is deterministic (fixed seeds), so a rebuild produces the same catalog,
-shoppers and numbers. All data lives in `data/`, which is not in git.
+shoppers and numbers as the release. All data lives in `data/`, which is not in git.
 
 ## The data
 
@@ -151,6 +147,8 @@ benchmark/          evaluate.py: writes reports/evaluation.md
 complements_data/   complement pairs used by s4 (committed data)
 reports/            evaluation results
 tests/              pytest: metrics, saved recommendations, pipeline output
+Dockerfile          the image: Python, packages, CLIP model and code
+start.sh            container start: fetch data on first run, then serve
 ```
 
 ## Design decisions

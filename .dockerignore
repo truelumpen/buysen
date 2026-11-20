@@ -1,0 +1,12 @@
+# Keep the image small and free of local or private files.
+.git
+.venv
+.vscode
+.pytest_cache
+**/__pycache__
+.env
+data
+recap.md
+reports
+tests
+benchmark
