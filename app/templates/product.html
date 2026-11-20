@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "base.html" import product_card, price, stars, arrows with context %}
+{% from "base.html" import price, stars, grid with context %}
 
 {% block title %}{{ product['title'] }} · Cloneazon{% endblock %}
 
@@ -84,14 +84,7 @@
   {% if related %}
   <div class="paged" data-kind="related" data-product="{{ product['id'] }}" data-page="1">
     <h2>Related items</h2>
-    <div class="row-frame">
-      {{ arrows(related_more) }}
-      <div class="grid">
-        {% for p in related %}
-        {{ product_card(p) }}
-        {% endfor %}
-      </div>
-    </div>
+    {{ grid(related, related_more) }}
   </div>
   {% else %}
   <h2>Related items</h2>

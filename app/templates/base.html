@@ -21,6 +21,18 @@
 </span>
 {% endmacro -%}
 
+{# A row of cards with the ‹ › arrows on its left and right edges (home page and product page). #}
+{% macro grid(products, has_next) %}
+<div class="row-frame">
+  {{ arrows(has_next) }}
+  <div class="grid">
+    {% for p in products %}
+    {{ product_card(p) }}
+    {% endfor %}
+  </div>
+</div>
+{% endmacro -%}
+
 <!doctype html>
 <html lang="en">
 <head>

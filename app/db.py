@@ -74,44 +74,7 @@ def popular_categories():
         "SELECT category FROM products GROUP BY category ORDER BY SUM(times_bought) DESC"
     )
     return [row["category"] for row in rows]
-
-
-def top_categories(user_id, limit=3):
-    """The categories this user interacts with most, topped up with popular ones."""
-    rows = _read(
-        """
-        SELECT products.category
-        FROM events
-        JOIN products ON products.id = events.product_id
-        WHERE events.user_id = ?
-        GROUP BY products.category
-        ORDER BY COUNT(*) DESC
-        """,
-        (user_id,),
-    )
-    categories = [row["category"] for row in rows]
-    for category in popular_categories():
-        if category not in categories:
-            categories.append(category)
-    return categories[:limit]
-
-
-def recommend_for_user(user_id, limit=5, offset=0):
-    """Placeholder until the Phase 3 model: popular items from the user's
-    favourite categories that they haven't bought yet."""
-    favourites = top_categories(user_id)
-    placeholders = ", ".join("?" for _ in favourites)
-    # Paging needs a fixed order, and without a final tie-breaker, products with equal ratings could swap places between requests, appearing twice or never.
-    return _read(
-        f"""
-        SELECT * FROM products
-        WHERE category IN ({placeholders})
-          AND id NOT IN (SELECT product_id FROM events WHERE user_id = ? AND kind = 'buy')
-        ORDER BY rating DESC, times_bought DESC, id
-        LIMIT ? OFFSET ?
-        """,
-        (*favourites, user_id, limit, offset), 
-    )
+    
 
 def search_products(query, limit=24, offset=0):
     """Products matching every word of `query`, most relevant first."""

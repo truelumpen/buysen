@@ -71,11 +71,10 @@ def _section_items(kind, user, category="", page=1, product=None, query=""):
     return items[:size], len(items) > size
 
 def _related_items(product, limit=10):
-    # Best available source first: hybrid (Phase 3), then content, then the placeholder.
-    for method in ("hybrid", "content"):
-        related = db.get_similar(product["id"], method, limit=limit)
-        if related:
-            return related
+    """Related items from recsys.content; same-category bestsellers until it has run."""
+    related = db.get_similar(product["id"], "content", limit=limit)
+    if related:
+        return related
     same_category = db.list_products(category=product["category"], limit=limit + 1)
     return [p for p in same_category if p["id"] != product["id"]][:limit]
 
