@@ -1,5 +1,8 @@
 # Cloneazon
 
+**Live demo: [cloneazon.truelumpen.dev](https://cloneazon.truelumpen.dev)**: log in with any
+username (no password), or as `shopper-0001` to see a shopper with history.
+
 A small online store with a real recommendation system behind it, built end to end:
 a data pipeline over the public Amazon Reviews 2023 dataset, a FastAPI website, and
 recommenders that learn from product images, product text and shopper behaviour.
