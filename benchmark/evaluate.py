@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 
 from app import db
+from app.main import _bought_with_items  # the same row the website shows
 from pipeline import s4_simulate_shoppers as s4
 from recsys import content, embed, personalize, semantic
 from recsys.metrics import category_agreement, coverage
@@ -63,7 +64,7 @@ def related_items_table(data, categories):
 def personalization_table(categories):
     """Simulated users: view products from one category, then check their top picks."""
     rng = random.Random(SEED)
-    popular = np.array([p["category"] for p in db.list_products(limit=TOP_N)])
+    popular = np.array([p["category"] for p in db.popular_products(limit=TOP_N)])
     lines = [
         (f"| Simulated user viewed {SIMULATED_VIEWS} products from | "
         f"Items for You in that category | Popular items in that category |"),
@@ -109,8 +110,10 @@ def bought_with_table():
     rng = random.Random(SEED)
     all_ids = [p["id"] for p in db.list_products(limit=-1)]
     methods = {
-        "People buy with (co-purchases)": lambda p: [x["id"] for x in db.bought_with(p, limit=ROW_SIZE)],
-        "Related items (similar products)": lambda p: [x["id"] for x in db.get_similar(p, "content", limit=ROW_SIZE)],
+        "People buy with (complements, then their related items)": lambda p: [
+        x["id"] for x in _bought_with_items({"id": p}, None)[:ROW_SIZE]
+        ],
+        "Complements only (same-trip co-purchases)": lambda p: [x["id"] for x in db.bought_with(p, limit=ROW_SIZE)],        "Related items (similar products)": lambda p: [x["id"] for x in db.get_similar(p, "content", limit=ROW_SIZE)],
         "Random products": lambda p: [i for i in rng.sample(all_ids, ROW_SIZE + 1) if i != p][:ROW_SIZE],
     }
     lines = [

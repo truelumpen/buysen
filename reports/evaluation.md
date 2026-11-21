@@ -24,15 +24,15 @@ Each simulated user views 5 random products from one category. We then check how
 | Simulated user viewed 5 products from | Items for You in that category | Popular items in that category |
 |---|---|---|
 | Beauty & Personal Care | 100% | 10% |
-| Cell Phones & Accessories | 100% | 0% |
-| Clothing | 100% | 40% |
+| Cell Phones & Accessories | 100% | 30% |
+| Clothing | 100% | 0% |
 | Electronics | 80% | 10% |
-| Home & Kitchen | 90% | 30% |
-| Office Products | 90% | 0% |
-| Pet Supplies | 100% | 0% |
+| Home & Kitchen | 90% | 0% |
+| Office Products | 90% | 20% |
+| Pet Supplies | 100% | 10% |
 | Sports & Outdoors | 30% | 0% |
-| Tools & Home Improvement | 70% | 10% |
-| Toys & Games | 70% | 0% |
+| Tools & Home Improvement | 70% | 0% |
+| Toys & Games | 70% | 20% |
 | **Average** | **83%** | **10%** |
 
 Simulated users are not real shoppers; this checks that personalization adapts, not that people would buy what it shows.
@@ -60,7 +60,8 @@ complements_data/complements.jsonl lists which products go together; the simulat
 
 | Row of 5 from | Rows with a true complement | Shown products that are complements |
 |---|---|---|
-| People buy with (co-purchases) | 50% | 18% |
+| People buy with (complements, then their related items) | 50% | 19% |
+| Complements only (same-trip co-purchases) | 50% | 18% |
 | Related items (similar products) | 27% | 7% |
 | Random products | 1% | 0% |
 

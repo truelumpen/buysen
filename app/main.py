@@ -48,35 +48,50 @@ def _product_or_404(product_id):
     return product
 
 def _section_items(kind, user, category="", page=1, product=None, query=""):
-    """One page of a home page section, and whether a next page exists."""
     size = PAGE_SIZES[kind]
     offset = (page - 1) * size
+    user_key = user["id"] if user else None  # recommendations skip what this user bought
     # Ask for one extra product: if it comes back, there is a next page.
     if kind == "for_you":
         items = personalize.recommend(user["id"], limit=size + 1, offset=offset) if user else []
     elif kind == "popular":
-        items = db.list_products(limit=size + 1, offset=offset)
+        items = db.popular_products(limit=size + 1, offset=offset, exclude_bought_by=user_key)
     elif kind == "related":
         # Related lists are short, so fetch everything up to this page and slice.
-        items = _related_items(product, limit=offset + size + 1)[offset:]
+        items = _related_items(product, user_key, limit=offset + size + 1)[offset:]
     elif kind == "listing":
         items = db.list_products(category=category, limit=size + 1, offset=offset)
     elif kind == "search":
         items = semantic.hybrid_search(query, limit=size + 1, offset=offset)
     elif kind == "bought_with":
-        items = db.bought_with(product["id"], limit=size + 1, offset=offset)
+        items = _bought_with_items(product, user_key)[offset : offset + size + 1]
     else:
-        user_key = user["id"] if user else None
         items = personalize.recommend(user_key, limit=size + 1, offset=offset, category=category)
     return items[:size], len(items) > size
 
-def _related_items(product, limit=10):
+def _related_items(product, user_key=None, limit=10):
     """Related items from recsys.content; same-category bestsellers until it has run."""
-    related = db.get_similar(product["id"], "content", limit=limit)
+    related = db.get_similar(product["id"], "content", limit=limit, exclude_bought_by=user_key)
     if related:
         return related
     same_category = db.list_products(category=product["category"], limit=limit + 1)
     return [p for p in same_category if p["id"] != product["id"]][:limit]
+
+def _bought_with_items(product, user_key):
+    """People buy with: the complements of `product` (bought on the same trip by other
+    shoppers) first, then the related items of each complement to fill the row.
+    Never the product itself or anything the user already bought."""
+    complements = db.bought_with(product["id"], exclude_bought_by=user_key)
+    items = list(complements)
+    for complement in complements:
+        items += db.get_similar(complement["id"], "content", limit=10, exclude_bought_by=user_key)
+    seen = {product["id"]}
+    unique = []
+    for item in items:
+        if item["id"] not in seen:  # the same product can be related to several complements
+            seen.add(item["id"])
+            unique.append(item)
+    return unique
 
 def _redirect(url):
     # 303 tells the browser to follow up with a GET, so refreshing never resubmits a form.

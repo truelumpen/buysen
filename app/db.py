@@ -147,43 +147,63 @@ def get_bought(user_id):
         """,
         (user_id,),
     )
+# Used by the queries below to leave out what a user already bought.
+# With exclude_bought_by=None (logged out) it matches nothing, so nothing is left out.
+NOT_BOUGHT_BY = "NOT IN (SELECT product_id FROM events WHERE user_id = ? AND kind = 'buy')"
 
-def bought_with(product_id, limit=5, offset=0):
-    """Products bought by the other shoppers who bought `product_id`:
-    "people who bought this also bought". Products bought on the same trip
-    (within a day) rank first, then ones bought at any time fill the row."""
+
+def popular_products(limit=10, offset=0, exclude_bought_by=None):
+    """Most bought in this store first (Amazon's sales break ties), skipping what the user bought."""
     return _read(
-        """
-        SELECT products.*,
-               COUNT(DISTINCT CASE
-                   WHEN ABS(julianday(other.created_at) - julianday(mine.created_at)) < 1
-                   THEN other.user_id END) AS same_trip,
-               COUNT(DISTINCT other.user_id) AS any_time
+        f"""
+        SELECT products.*
+        FROM products
+        LEFT JOIN (SELECT product_id, COUNT(*) AS store_buys
+                   FROM events WHERE kind = 'buy' GROUP BY product_id) AS sales
+          ON sales.product_id = products.id
+        WHERE products.id {NOT_BOUGHT_BY}
+        ORDER BY COALESCE(sales.store_buys, 0) DESC, products.times_bought DESC, products.id
+        LIMIT ? OFFSET ?
+        """,
+        (exclude_bought_by, limit, offset),
+    )
+
+
+def bought_with(product_id, limit=-1, exclude_bought_by=None):
+    """Complements of `product_id`: products other shoppers bought on the same trip
+    (within a day), most shared buyers first, skipping what the user bought."""
+    return _read(
+        f"""
+        SELECT products.*, COUNT(DISTINCT other.user_id) AS together
         FROM events AS mine
         JOIN events AS other
           ON other.user_id = mine.user_id
          AND other.kind = 'buy'
          AND other.product_id != mine.product_id
+         AND ABS(julianday(other.created_at) - julianday(mine.created_at)) < 1
         JOIN products ON products.id = other.product_id
         WHERE mine.kind = 'buy' AND mine.product_id = ?
+          AND products.id {NOT_BOUGHT_BY}
         GROUP BY products.id
-        ORDER BY same_trip DESC, any_time DESC, products.id
-        LIMIT ? OFFSET ?
+        ORDER BY together DESC, products.times_bought DESC, products.id
+        LIMIT ?
         """,
-        (product_id, limit, offset),
+        (product_id, exclude_bought_by, limit),
     )
 
-def get_similar(product_id, method, limit=6):
+
+def get_similar(product_id, method, limit=6, exclude_bought_by=None):
     return _read(
-        """
+        f"""
         SELECT products.*, similar_items.score
         FROM similar_items
         JOIN products ON products.id = similar_items.similar_id
         WHERE similar_items.product_id = ? AND similar_items.method = ?
+          AND products.id {NOT_BOUGHT_BY}
         ORDER BY similar_items.rank
         LIMIT ?
         """,
-        (product_id, method, limit),
+        (product_id, method, exclude_bought_by, limit),
     )
 
 def replace_similar(method, rows):
