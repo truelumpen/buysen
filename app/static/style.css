@@ -640,6 +640,10 @@ input:not([type="hidden"]) {
   box-shadow: var(--shadow);
 }
 
+.product-details {
+  overflow-wrap: anywhere; /* very long words or links wrap instead of running past the card */
+}
+
 .product-details .fancy:first-child {
   margin-top: 0;
 }

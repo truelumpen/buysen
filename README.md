@@ -9,12 +9,18 @@ recommenders that learn from product images, product text and shopper behaviour.
 Every result in this README is reproducible from the code and measured in
 [`reports/evaluation.md`](reports/evaluation.md).
 
+![Home page: personal recommendations and "People buy with"](docs/screenshots/home.webp)
+
+| Search by meaning | Product page with related items | Phone |
+|---|---|---|
+| ![Search for "gift for a dog lover"](docs/screenshots/search.webp) | ![Product page](docs/screenshots/product.webp) | ![Home and product page on a phone](docs/screenshots/phone.webp) |
+
 ## What the store does
 
 | Feature | Where you see it | How it works |
 |---|---|---|
 | **Related items** | Under every product | CLIP turns each product's title, features and photo into vectors; the closest products by cosine similarity are precomputed |
-| **Items for You** | Home page, after your first view or purchase | Your "taste" is a weighted average of the products you viewed and bought (purchases count 3x, recent activity counts more); every product is scored against it live |
+| **Recommended for you** | Home page, after your first view or purchase | Your "taste" is a weighted average of the products you viewed and bought (purchases count 3x, recent activity counts more); every product is scored against it live |
 | **People buy with *your last purchase*** | Home page, after a purchase | Live SQL over purchases: products bought by the other shoppers who bought the same item, with same-trip purchases ranked first |
 | **Shop by category** | Home page | Your three best-matching categories, each filled with your best matches |
 | **Search by meaning** | Search box | Keyword search (SQLite FTS5, BM25 ranking) merged with CLIP meaning search by Reciprocal Rank Fusion, so "something to keep my dog busy" finds chew toys |
@@ -30,7 +36,7 @@ From [`reports/evaluation.md`](reports/evaluation.md) (4,999 products, 1,000 sim
 | Question | Result |
 |---|---|
 | Are related items the same kind of product? | **79%** of products' closest match shares their category |
-| Does personalization adapt to the shopper? | After viewing 5 products from a category, **83%** of *Items for You* come from it (popular items: 10%) |
+| Does personalization adapt to the shopper? | After viewing 5 products from a category, **83%** of *Recommended for you* come from it (popular items: 10%) |
 | Does *People buy with* find complements (tent → sleeping bag)? | A true complement appears in **50%** of rows, against 27% for similar-product matching and 1% for random |
 | Does meaning search ignore nonsense? | Real queries find 5-35 matches; "asdf jkl" finds none |
 
@@ -62,7 +68,7 @@ flowchart LR
 
 - **Offline (minutes, run once):** the pipeline builds the catalog, database and
   simulated shoppers; `recsys.build` computes the CLIP vectors and related items.
-- **Online (milliseconds, per request):** Items for You is one matrix multiplication,
+- **Online (milliseconds, per request):** Recommended for you is one matrix multiplication,
   People buy with is one SQL query, and search embeds the query with CLIP (~30 ms on CPU).
 
 ## Run it
@@ -142,7 +148,7 @@ pipeline/           s1-s4: catalog, images, database, simulated shoppers
 recsys/             recommenders
   embed.py          CLIP vectors; shared loaders for the model and the vectors
   content.py        related items (cosine similarity, top-k)
-  personalize.py    Items for You, top categories
+  personalize.py    Recommended for you, top categories
   semantic.py       search by meaning + Reciprocal Rank Fusion
   build.py          rebuilds everything above in order
   metrics.py        evaluation metrics
