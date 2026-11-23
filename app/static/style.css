@@ -217,6 +217,10 @@ input:not([type="hidden"]) {
   user-select: none;
 }
 
+.menu-icon {
+  display: none; /* phones only: replaces the word "Categories" */
+}
+
 .categories-menu summary::-webkit-details-marker {
   display: none;
 }
@@ -845,17 +849,74 @@ input:not([type="hidden"]) {
     padding: 0.6rem 1rem;
   }
 
-  .brand img {
-    height: 36px;
+  /* Row 1: logo, Categories and the account; row 2: search (wrapped by the 1100px rules).
+     Everything on row 1 is shrunk so it fits a 360px-wide phone. */
+  /* A grid instead of wrapping flex: row 1 has three cells (logo, Categories, account),
+     the account cell takes the space left and shrinks instead of wrapping. */
+  .header-inner {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    gap: 0.6rem 0.5rem;
+  }
+
+  .search {
+    grid-column: 1 / -1; /* row 2: the full width */
   }
 
   .account {
-    gap: 0.75rem;
-    font-size: 0.9rem;
+    justify-content: flex-end;
+    flex-shrink: 1;
+  }
+
+  .user-switch {
+    flex-shrink: 1;
+  }
+
+  .brand img {
+    height: 24px;
+  }
+
+  .categories-menu summary {
+    padding: 0.35rem 0.45rem;
+  }
+
+  .menu-icon {
+    display: block;
+  }
+
+  .categories-text,
+  .categories-menu .chevron {
+    display: none;
+  }
+
+  .account {
+    gap: 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .user-switch {
+    gap: 0.4rem;
+  }
+
+  .user-switch .icon,
+  .purchases-text {
+    display: none; /* the cart icon alone links to purchases */
   }
 
   .user-switch input {
-    width: 7rem;
+    width: 100%;
+    flex: 1 1 4rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .user-switch button:not(.link-button) {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .username {
+    max-width: 5rem;
   }
 
   .container {

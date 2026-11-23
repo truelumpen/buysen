@@ -59,7 +59,9 @@
       <a class="brand" href="/"><img src="/static/images/logo.webp" alt="Cloneazon" width="600" height="134"></a>
 
       <details class="categories-menu">
-        <summary>Categories
+        <summary aria-label="Categories">
+          <svg class="icon menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <span class="categories-text">Categories</span>
           <svg class="icon chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </summary>
         <nav class="categories-panel" aria-label="Categories">
@@ -86,9 +88,9 @@
           <span class="username" title="{{ user['name_'] }}">{{ user['name_'] }}</span>
           <button type="submit" class="link-button">Log out</button>
         </form>
-        <a class="purchases-link" href="/bought">
+        <a class="purchases-link" href="/bought" aria-label="Your purchases">
           <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11h11l2-8H6.2"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/></svg>
-          Your purchases
+          <span class="purchases-text">Your purchases</span>
         </a>
         {% else %}
         <form class="user-switch" method="post" action="/login">
