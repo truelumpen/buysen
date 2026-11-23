@@ -1,12 +1,13 @@
 {% extends "base.html" %}
-{% from "base.html" import grid with context %}
+{% from "base.html" import grid, empty_state with context %}
 
 {% block content %}
-{# Shown once the user has viewed or bought something; until then the page starts with Popular items. #}
+{# Personal picks sit on the landscape banner: the mascot shows on its left,
+   the product cards stand over the landscape. Shown once the user has some history. #}
 {% if for_you %}
-<section class="home-section">
-  <div class="paged" data-kind="for_you" data-category="" data-page="1">
-    <h2>Items for You</h2>
+<section class="hero">
+  <div class="hero-row paged" data-kind="for_you" data-category="" data-page="1">
+    <h2 class="fancy">Recommended for you</h2>
     {{ grid(for_you, for_you_more) }}
   </div>
 </section>
@@ -15,7 +16,7 @@
 {% if bought_with %}
 <section class="home-section">
   <div class="paged" data-kind="bought_with" data-product="{{ last_bought['id'] }}" data-page="1">
-    <h2>People buy with <a href="/product/{{ last_bought['id'] }}">{{ last_bought['title']|truncate(50) }}</a></h2>
+    <h2 class="fancy">People buy with <a href="/product/{{ last_bought['id'] }}">{{ last_bought['title']|truncate(45) }}</a></h2>
     {{ grid(bought_with, bought_with_more) }}
   </div>
 </section>
@@ -24,24 +25,23 @@
 <section class="home-section">
   {% if popular %}
   <div class="paged" data-kind="popular" data-category="" data-page="1">
-    <h2>Popular items</h2>
+    <h2 class="fancy">Popular items</h2>
     {{ grid(popular, popular_more) }}
   </div>
   {% else %}
-  <h2>Popular items</h2>
-  <p class="empty">The most bought products will appear here.</p>
+  {{ empty_state("The store is still being stocked. The most bought products will appear here.") }}
   {% endif %}
 </section>
 
+{% if shelves %}
 <section class="home-section">
-  <h2>Shop by category</h2>
+  <h2 class="fancy">Shop by category</h2>
   {% for category, products, has_next in shelves %}
   <div class="shelf paged" data-kind="category" data-category="{{ category }}" data-page="1">
-    <h3><a href="/category/{{ category|urlencode }}">{{ category }}</a></h3>
+    <h3><a href="/category/{{ category|urlencode }}">{{ category }} ›</a></h3>
     {{ grid(products, has_next) }}
   </div>
-  {% else %}
-  <p class="empty">Your top three categories will appear here.</p>
   {% endfor %}
 </section>
+{% endif %}
 {% endblock %}

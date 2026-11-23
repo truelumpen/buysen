@@ -4,65 +4,83 @@
 {% block title %}{{ product['title'] }} · Cloneazon{% endblock %}
 
 {% block content %}
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="/">Home</a> <span>›</span>
+  <a href="/category/{{ product['category']|urlencode }}">{{ product['category'] }}</a> <span>›</span>
+  <span class="current">{{ product['title']|truncate(70) }}</span>
+</nav>
+
 <article class="product">
-  <img class="product-image" src="/{{ product['image_path'] }}" alt="{{ product['title'] }}">
+  <div class="product-image"><img src="/{{ product['image_path'] }}" alt="{{ product['title'] }}"></div>
 
   <div class="product-info">
-    <a class="breadcrumb" href="/category/{{ product['category']|urlencode }}">{{ product['category'] }}</a>
     <h1>{{ product['title'] }}</h1>
-
-    {% if product['rating'] is not none %}
     <p class="rating">
+      {% if product['rating'] is not none %}
       <span class="stars">{{ stars(product['rating']|round|int) }}</span>
-      {{ "%.1f"|format(product['rating']) }} out of 5
+      {{ "%.1f"|format(product['rating']) }} out of 5 <span class="divider">|</span>
+      {% endif %}
+      {{ "{:,}".format(product['times_bought']) }} bought
     </p>
-    {% endif %}
-    <p class="muted">{{ "{:,}".format(product['times_bought']) }} bought</p>
-
     <p class="price price-large">{{ price(product['price_cents']) }}</p>
+  </div>
 
+  <aside class="buy-box">
+    <p class="buy-box-title">In stock</p>
+    <p class="price">{{ price(product['price_cents']) }}</p>
     {% if user %}
     <form method="post" action="/product/{{ product['id'] }}/buy">
-      <button type="submit" class="button-primary">Buy now</button>
+      <button type="submit" class="button-primary">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>
+        Buy now
+      </button>
     </form>
     {% else %}
-    <p class="muted">Log in to buy this product.</p>
+    <p class="muted">Log in at the top of the page to buy this product.</p>
     {% endif %}
-
-    {% if product['features'] %}
-    <h3>About this item</h3>
-    <ul class="features">
-      {% for bullet in product['features'].split('\n') %}
-      <li>{{ bullet }}</li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-
-    {% if product['description_'] %}
-    <p class="description">{{ product['description_'] }}</p>
-    {% endif %}
-  </div>
+  </aside>
 </article>
 
-<section class="reviews">
-  <h2>Reviews ({{ reviews|length }})</h2>
-
-  {% if user %}
-  <form class="review-form" method="post" action="/product/{{ product['id'] }}/review">
-    <h3>Write a review</h3>
-    <label for="rating">Rating</label>
-    <select id="rating" name="rating">
-      {% for n in range(5, 0, -1) %}
-      <option value="{{ n }}">{{ stars(n) }}</option>
-      {% endfor %}
-    </select>
-    <label for="text">Review (optional)</label>
-    <textarea id="text" name="text" rows="4"></textarea>
-    <button type="submit">Submit review</button>
-  </form>
-  {% else %}
-  <p class="muted">Log in to write a review.</p>
+{% if product['features'] or product['description_'] %}
+<section class="product-details">
+  {% if product['features'] %}
+  <h2 class="fancy small">About this item</h2>
+  <ul class="features">
+    {% for bullet in product['features'].split('\n') %}
+    <li>{{ bullet }}</li>
+    {% endfor %}
+  </ul>
   {% endif %}
+
+  {% if product['description_'] %}
+  <p class="description">{{ product['description_'] }}</p>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="reviews">
+  <div class="section-heading">
+    <h2 class="fancy">Reviews ({{ reviews|length }})</h2>
+    {% if user %}
+    <details class="write-review">
+      <summary class="button-outline">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>
+        Write a review
+      </summary>
+      <form class="review-form" method="post" action="/product/{{ product['id'] }}/review">
+        <label for="rating">Rating</label>
+        <select id="rating" name="rating">
+          {% for n in range(5, 0, -1) %}
+          <option value="{{ n }}">{{ stars(n) }}</option>
+          {% endfor %}
+        </select>
+        <label for="text">Review (optional)</label>
+        <textarea id="text" name="text" rows="4"></textarea>
+        <button type="submit" class="button-primary">Submit review</button>
+      </form>
+    </details>
+    {% endif %}
+  </div>
 
   {% for r in reviews %}
   <div class="review">
@@ -76,19 +94,16 @@
     {% endif %}
   </div>
   {% else %}
-  <p class="empty">No reviews yet. Be the first to write one.</p>
+  <p class="muted">No reviews yet.{% if not user %} Log in to write the first one.{% else %} Be the first to write one.{% endif %}</p>
   {% endfor %}
 </section>
 
 <section class="related">
   {% if related %}
   <div class="paged" data-kind="related" data-product="{{ product['id'] }}" data-page="1">
-    <h2>Related items</h2>
+    <h2 class="fancy">Related items</h2>
     {{ grid(related, related_more) }}
   </div>
-  {% else %}
-  <h2>Related items</h2>
-  <p class="empty">Related items will appear here.</p>
   {% endif %}
 </section>
 {% endblock %}

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% from "base.html" import product_card with context %}
+{% from "base.html" import product_card, empty_state with context %}
 
 {% block title %}{{ heading }} · Cloneazon{% endblock %}
 
 {% block content %}
-<h1>{{ heading }}</h1>
+<h1 class="fancy page-title">{{ heading }}</h1>
 
 {% if products %}
 {# data-* tell the "Show more" script what to fetch next from GET /section #}
@@ -14,9 +14,9 @@
     {{ product_card(p) }}
     {% endfor %}
   </div>
-  <button type="button" class="show-more" {% if not has_more %}hidden{% endif %}>Show more</button>
+  <button type="button" class="show-more button-outline" {% if not has_more %}hidden{% endif %}>Show more</button>
 </div>
 {% else %}
-<p class="empty">No products match your search. Try fewer or different words.</p>
+{{ empty_state("No products match your search. Try fewer or different words.") }}
 {% endif %}
 {% endblock %}

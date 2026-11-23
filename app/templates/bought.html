@@ -4,20 +4,34 @@
 {% block title %}Your purchases · Cloneazon{% endblock %}
 
 {% block content %}
-<h1>Your purchases</h1>
+<h1 class="fancy page-title">Your purchases</h1>
 
-{% for p in products %}
-<div class="order">
-  <a href="/product/{{ p['id'] }}">
-    <img class="order-image" src="/{{ p['image_path'] }}" alt="{{ p['title'] }}">
-  </a>
-  <div class="order-info">
-    <a href="/product/{{ p['id'] }}">{{ p['title'] }}</a>
-    <p class="muted">Bought on {{ p['bought_at'][:10] }}</p>
+<div class="purchases">
+  {% if products %}
+  <img class="purchases-mascot" src="/static/images/mascot-standing.webp" alt="" width="420" height="694">
+  {% else %}
+  {# Nothing bought yet: the mascot searches for something with his magnifying glass #}
+  <img class="purchases-mascot" src="/static/images/mascot-product.webp" alt="" width="420" height="592">
+  {% endif %}
+
+  <div class="purchases-list">
+    {% for p in products %}
+    <div class="order">
+      <a class="order-image" href="/product/{{ p['id'] }}">
+        <img src="/{{ p['image_path'] }}" alt="{{ p['title'] }}">
+      </a>
+      <div class="order-info">
+        <a href="/product/{{ p['id'] }}">{{ p['title'] }}</a>
+        <p class="muted">Bought on {{ p['bought_at'][:10] }}</p>
+      </div>
+      <span class="price">{{ price(p['price_cents']) }}</span>
+    </div>
+    {% else %}
+    <div class="purchases-empty">
+      <p>You haven't bought anything yet.</p>
+      <a class="button-outline" href="/">Start shopping</a>
+    </div>
+    {% endfor %}
   </div>
-  <span class="price">{{ price(p['price_cents']) }}</span>
 </div>
-{% else %}
-<p class="empty">You haven't bought anything yet. <a href="/">Start shopping</a></p>
-{% endfor %}
 {% endblock %}
