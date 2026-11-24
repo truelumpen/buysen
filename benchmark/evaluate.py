@@ -134,7 +134,7 @@ def bought_with_table():
 def main():
     data, categories = load_data()
     report = [
-        "# Cloneazon evaluation (Phase 3)",
+        "# Buysen evaluation (Phase 3)",
         "",
         (f"Generated {date.today()} by `uv run python -m benchmark.evaluate` "
         f"on {len(categories):,} products. Random choices use seed {SEED}."),

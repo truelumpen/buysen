@@ -1,4 +1,4 @@
-# Cloneazon evaluation (Phase 3)
+# Buysen evaluation (Phase 3)
 
 Generated 2026-11-20 by `uv run python -m benchmark.evaluate` on 4,999 products. Random choices use seed 42.
 

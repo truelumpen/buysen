@@ -1,6 +1,6 @@
-# Cloneazon: the store and its recommenders, ready to run anywhere.
-#   docker build -t cloneazon .
-#   docker run -p 8000:8000 -v cloneazon-data:/app/data cloneazon
+# Buysen: the store and its recommenders, ready to run anywhere.
+#   docker build -t buysen .
+#   docker run -p 8000:8000 -v buysen-data:/app/data buysen
 
 # Python 3.12 with uv already installed.
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim

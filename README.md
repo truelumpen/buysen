@@ -1,6 +1,6 @@
-# Cloneazon
+# Buysen
 
-**Live demo: [cloneazon.truelumpen.dev](https://cloneazon.truelumpen.dev)**: log in with any
+**Live demo: [buysen.truelumpen.dev](https://buysen.truelumpen.dev)**: log in with any
 username (no password), or as `shopper-0001` to see a shopper with history.
 
 A small online store with a real recommendation system behind it, built end to end:
@@ -79,19 +79,19 @@ Requires [Docker](https://docs.docker.com/get-docker/). Nothing else: Python, th
 packages and the CLIP model are inside the image.
 
 ```bash
-git clone https://github.com/truelumpen/cloneazon.git
-cd cloneazon
-docker build -t cloneazon .
-docker run -p 8000:8000 -v cloneazon-data:/app/data cloneazon
+git clone https://github.com/truelumpen/buysen.git
+cd buysen
+docker build -t buysen .
+docker run -p 8000:8000 -v buysen-data:/app/data buysen
 ```
 
 Open http://127.0.0.1:8000 when the log shows `Uvicorn running`.
 
 - **First start (about 5 minutes):** the container downloads the prebuilt data from the
-  [`data-v1` release](https://github.com/truelumpen/cloneazon/releases/tag/data-v1)
+  [`data-v1` release](https://github.com/truelumpen/buysen/releases/tag/data-v1)
   (database, CLIP embeddings and catalog, 29 MB) and then the product photos from the
   dataset's links. Photos are not redistributed in the release.
-- **Later starts (seconds):** the data stays in the `cloneazon-data` volume.
+- **Later starts (seconds):** the data stays in the `buysen-data` volume.
 - Uses about 500 MB of memory while running; the image is about 3 GB (mostly PyTorch and CLIP).
 
 Log in with any username (no password) and browse. Log in as `shopper-0001` to see a

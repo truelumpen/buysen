@@ -63,7 +63,7 @@ def main():
 
     with closing(sqlite3.connect(db.DB_PATH)) as conn:
         if conn.execute("SELECT COUNT(*) FROM users WHERE name_ LIKE 'shopper-%'").fetchone()[0]:
-            print("Shoppers already exist. To redo them, delete data/cloneazon.db and rerun s3 and s4.")
+            print("Shoppers already exist. To redo them, delete data/buysen.db and rerun s3 and s4.")
             return
 
         events = []

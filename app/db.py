@@ -1,4 +1,4 @@
-"""All database access for Cloneazon."""
+"""All database access for Buysen."""
 
 import re
 import sqlite3
@@ -8,7 +8,7 @@ from contextlib import (
 from pathlib import Path
 
 APP_DIR = Path(__file__).parent
-DB_PATH = APP_DIR.parent / "data" / "cloneazon.db"
+DB_PATH = APP_DIR.parent / "data" / "buysen.db"
 
 
 def _connect():

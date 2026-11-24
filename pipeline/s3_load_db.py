@@ -38,7 +38,7 @@ def main():
 
     with closing(sqlite3.connect(db.DB_PATH)) as conn:
         if conn.execute("SELECT COUNT(*) FROM products").fetchone()[0]:
-            print("Products are already loaded. Delete data/cloneazon.db to reload.")
+            print("Products are already loaded. Delete data/buysen.db to reload.")
             return
         conn.executemany(
             """

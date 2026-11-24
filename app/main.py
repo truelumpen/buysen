@@ -1,4 +1,4 @@
-"""Web routes for Cloneazon."""
+"""Web routes for Buysen."""
 
 from contextlib import asynccontextmanager
 from typing import Literal

@@ -63,7 +63,7 @@ wheels = [
 ]
 
 [[package]]
-name = "cloneazon"
+name = "buysen"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

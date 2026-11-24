@@ -1,4 +1,4 @@
--- Cloneazon data model: every table the project uses.
+-- Buysen data model: every table the project uses.
 
 CREATE TABLE IF NOT EXISTS products (
     id          INTEGER PRIMARY KEY,

@@ -2,10 +2,10 @@
 # Container start: make sure data/ is filled, then run the website.
 set -e
 
-DATA_URL="https://github.com/truelumpen/cloneazon/releases/download/data-v1/cloneazon-data-v1.tar.gz"
+DATA_URL="https://github.com/truelumpen/buysen/releases/download/data-v1/buysen-data-v1.tar.gz"
 
 # First start only: the prebuilt database, embeddings and catalog (29 MB).
-if [ ! -f data/cloneazon.db ]; then
+if [ ! -f data/buysen.db ]; then
     echo "First start: downloading prebuilt data..."
     curl -fsSL "$DATA_URL" | tar -xz
 fi

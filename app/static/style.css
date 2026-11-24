@@ -1,4 +1,4 @@
-/* Cloneazon styles: a storybook look on cream paper, sage greens and a serif font. */
+/* Buysen styles: a storybook look on cream paper, sage greens and a serif font. */
 
 :root {
   --ink: #3a4330;          /* main text: dark olive */
@@ -191,7 +191,7 @@ input:not([type="hidden"]) {
 
 .brand img {
   display: block;
-  height: 54px;
+  height: 50px;
   width: auto;
 }
 
@@ -793,7 +793,7 @@ input:not([type="hidden"]) {
 }
 
 .footer-inner img {
-  height: 34px;
+  height: 40px;
   width: auto;
 }
 
@@ -877,7 +877,7 @@ input:not([type="hidden"]) {
   }
 
   .brand img {
-    height: 24px;
+    height: 30px;
   }
 
   .categories-menu summary {
